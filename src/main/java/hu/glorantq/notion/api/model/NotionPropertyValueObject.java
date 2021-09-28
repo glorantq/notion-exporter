@@ -72,6 +72,9 @@ public class NotionPropertyValueObject {
         private Date end;
     }
 
+    @Expose
+    private FormulaPropertyValue formula; // TODO: Unknown name, just a guess
+
     @Getter
     @AllArgsConstructor
     @NoArgsConstructor
@@ -95,6 +98,8 @@ public class NotionPropertyValueObject {
             @SerializedName("date") DATE
         }
     }
+
+
 
     // TODO: Only title and rich-text supported
 
