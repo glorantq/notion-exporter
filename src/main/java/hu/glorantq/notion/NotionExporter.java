@@ -3,6 +3,9 @@ package hu.glorantq.notion;
 import hu.glorantq.notion.api.NotionAPI;
 import hu.glorantq.notion.api.StringConstants;
 import hu.glorantq.notion.api.model.NotionPage;
+import hu.glorantq.notion.api.model.NotionPaginatedResponse;
+import hu.glorantq.notion.api.model.blocks.NotionBlock;
+import hu.glorantq.notion.api.model.blocks.NotionNotImplementedBlock;
 import me.grison.jtoml.impl.Toml;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -179,6 +182,13 @@ public class NotionExporter {
     private static void handleStartup(String pageName, String pageAuthor, String faviconPath, String rootNotionPageId, String notionIntegrationKey, boolean followLinkedPages) {
         LOGGER.info("{} {} {} {} {} {}", pageName, pageAuthor, faviconPath, rootNotionPageId, notionIntegrationKey, followLinkedPages);
 
+        NotionBlock.Type[] blockTypes = NotionBlock.Type.values();
+        for(NotionBlock.Type blockType : blockTypes) {
+            if(blockType.getTypeClass() == NotionNotImplementedBlock.class) {
+                LOGGER.warn("Found unimplemented block supported by the API: {}!", blockType.name().toLowerCase());
+            }
+        }
+
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(chain -> {
                     Request original = chain.request();
@@ -202,7 +212,13 @@ public class NotionExporter {
 
         try {
             NotionPage rootPage = notionAPI.retrievePage(rootNotionPageId).execute().body();
-            LOGGER.info("{}", rootPage.toString());
+            LOGGER.info("{}", rootPage);
+
+            NotionBlock pageBlock = notionAPI.retrieveBlock(rootNotionPageId).execute().body();
+            LOGGER.info("{}", pageBlock);
+
+            NotionPaginatedResponse<NotionBlock> pageChildren = notionAPI.retrieveBlockChildren(rootNotionPageId, 100).execute().body();
+            LOGGER.info("{}", pageChildren);
         } catch (Exception e) {
             LOGGER.error("Failed to fetch page!", e);
         }

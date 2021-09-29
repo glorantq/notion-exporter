@@ -99,9 +99,19 @@ public class NotionPropertyValueObject {
         }
     }
 
+    @Expose
+    private List<RelationPropertyValue> relation;
 
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    public static class RelationPropertyValue {
+        @Expose
+        private UUID id;
+    }
 
-    // TODO: Only title and rich-text supported
+    // TODO: Rollup
 
     public enum Type {
         @SerializedName("rich_text") RICH_TEXT, @SerializedName("number") NUMBER, @SerializedName("select") SELECT,
