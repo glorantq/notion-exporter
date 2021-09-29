@@ -16,7 +16,7 @@ import java.util.Date;
 public class NotionFile {
     @SerializedName("type")
     @Expose
-    private String fileType;
+    private Type fileType;
 
     @SerializedName("external")
     @Expose
@@ -48,5 +48,9 @@ public class NotionFile {
         @SerializedName("expiry_time")
         @Expose
         private Date expiryTime;
+    }
+
+    public enum Type {
+        @SerializedName("external") EXTERNAL, @SerializedName("file") HOSTED
     }
 }

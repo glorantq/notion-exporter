@@ -14,7 +14,7 @@ import lombok.ToString;
 @ToString
 public class NotionIcon {
     @Expose
-    private String type;
+    private Type type;
 
     @SerializedName("external")
     @Expose
@@ -33,10 +33,14 @@ public class NotionIcon {
             throw new RuntimeException("This icon object contains a file!");
         }
 
-        return new NotionFile(type, externalFileData, hostedFileData);
+        return new NotionFile(type == Type.EXTERNAL ? NotionFile.Type.EXTERNAL : NotionFile.Type.HOSTED, externalFileData, hostedFileData);
     }
 
     public boolean isEmoji() {
-        return type.equalsIgnoreCase(StringConstants.TYPE_EMOJI);
+        return type == Type.EMOJI;
+    }
+
+    public enum Type {
+        @SerializedName("emoji") EMOJI, @SerializedName("external") EXTERNAL, @SerializedName("file") HOSTED
     }
 }
