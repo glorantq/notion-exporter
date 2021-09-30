@@ -47,6 +47,10 @@ public class NotionRichText {
         @Expose
         private Link link;
 
+        @Getter
+        @ToString
+        @AllArgsConstructor
+        @NoArgsConstructor
         public static class Link {
             @Expose
             private String type;

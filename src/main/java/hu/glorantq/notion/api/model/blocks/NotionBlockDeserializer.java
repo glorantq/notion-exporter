@@ -1,6 +1,7 @@
 package hu.glorantq.notion.api.model.blocks;
 
 import com.google.gson.*;
+import hu.glorantq.notion.api.model.blocks.impl.NotionNumberedListItemBlock;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
@@ -35,7 +36,7 @@ public class NotionBlockDeserializer implements JsonDeserializer<NotionBlock> {
 
                 returnValue = createdInstance.deserialize(blockJsonRepresentation, context);
             } catch (Exception e0) {
-                throw new JsonParseException("Failed to instantiate type-specific block object!", e0);
+                throw new JsonParseException("Failed to instantiate type-specific block object! " + typeName, e0);
             }
 
             return returnValue;

@@ -42,7 +42,7 @@ public abstract class NotionBlock {
         @SerializedName("embed") EMBED(NotionEmbedBlock.class), @SerializedName("image") IMAGE(NotionImageBlock.class),
         @SerializedName("video") VIDEO(NotionVideoBlock.class), @SerializedName("file") FILE(NotionFileBlock.class),
         @SerializedName("pdf") PDF(NotionPDFBlock.class), @SerializedName("bookmark") BOOKMARK(NotionBookmarkBlock.class),
-        @SerializedName("unsupported") UNSUPPORTED(NotionUnsupportedBlock.class);
+        @SerializedName("code") CODE(NotionCodeBlock.class), @SerializedName("unsupported") UNSUPPORTED(NotionUnsupportedBlock.class);
 
         private final Class<? extends NotionBlock> typeClass;
     }
