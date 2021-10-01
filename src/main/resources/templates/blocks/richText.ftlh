@@ -1,3 +1,4 @@
+<#import "../common.ftl" as common>
 <#macro renderRichText richText>
     <#assign style = richText.annotations>
 
@@ -13,7 +14,23 @@
         </#if>
 
         <#if richText.type.name() == "EQUATION">
-            <span class="katex-math">${richText.equation.expression}</span>
+            <#assign equation = richText.equation.expression>
+            <span class="katex-math" data-equation="${equation}">${equation}</span>
+        </#if>
+
+        <#if richText.type.name() == "MENTION">
+            <#assign mention = richText.mention>
+
+            <#if mention.type.name() == "PAGE">
+                <#assign pageId = mention.page.id>
+                <#assign page = fetchPage(pageId)>
+
+                <a class="block-link external-link" href="#${pageId}">
+                    <@common.getIcon icon=page.icon imgClass="block-link-icon" />
+                    <i data-feather="external-link"></i>
+                    <span><@common.getPageTitle page=page /></span>
+                </a>
+            </#if>
         </#if>
     </span>
 

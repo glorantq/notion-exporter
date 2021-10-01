@@ -1,7 +1,6 @@
 package hu.glorantq.notion.api.model.blocks;
 
 import com.google.gson.*;
-import hu.glorantq.notion.api.model.blocks.impl.NotionNumberedListItemBlock;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;

@@ -50,6 +50,7 @@ public class NotionRenderer {
         addBlockRenderer(NotionHeadingThreeBlock.class, new FreemarkerBlockRenderer<NotionHeadingThreeBlock>("blocks/headingThree.ftlh"));
         addBlockRenderer(NotionBulletedListItemBlock.class, new FreemarkerBlockRenderer<NotionBulletedListItemBlock>("blocks/bulletedListItem.ftlh"));
         addBlockRenderer(NotionNumberedListItemBlock.class, new FreemarkerBlockRenderer<NotionNumberedListItemBlock>("blocks/numberedListItem.ftlh"));
+        addBlockRenderer(NotionChildPageBlock.class, new FreemarkerBlockRenderer<NotionChildPageBlock>("blocks/childPage.ftlh"));
 
         // TODO: Add blocks
     }
@@ -79,8 +80,7 @@ public class NotionRenderer {
             Collections.reverse(pageHierarchy);
 
             dataModel.put("pageHierarchy", pageHierarchy);
-            dataModel.put("renderBlock", new RenderBlockMethod());
-            dataModel.put("getBlockChildren", new GetBlockChildrenMethod());
+            addTemplateMethods(dataModel);
 
             StringWriter stringWriter = new StringWriter();
             pageTemplate.process(dataModel, stringWriter);
@@ -111,6 +111,12 @@ public class NotionRenderer {
         logger.error("Registered renderer for {}!", blockType.getName());
     }
 
+    private void addTemplateMethods(Map<String, Object> dataModel) {
+        dataModel.put("renderBlock", new RenderBlockMethod());
+        dataModel.put("getBlockChildren", new GetBlockChildrenMethod());
+        dataModel.put("fetchPage", new FetchPageMethod());
+    }
+
     private class FreemarkerBlockRenderer<T extends NotionBlock> implements BlockRenderer {
         private final String templatePath;
 
@@ -125,7 +131,7 @@ public class NotionRenderer {
 
                 Map<String, Object> dataModel = new HashMap<>();
                 dataModel.put("block", notionBlock);
-                dataModel.put("renderBlock", new RenderBlockMethod());
+                addTemplateMethods(dataModel);
 
                 StringWriter stringWriter = new StringWriter();
                 blockTemplate.process(dataModel, stringWriter);
@@ -157,6 +163,25 @@ public class NotionRenderer {
         stringBuilder.append("</html>");
 
         return stringBuilder.toString();
+    }
+
+    private class FetchPageMethod implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel pageIdModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) pageIdModel;
+            String pageId = scalarModel.getAsString();
+
+            try {
+                return notionAPI.retrievePage(pageId).execute().body();
+            } catch (Exception e) {
+                throw new TemplateModelException("Failed to fetch page!", e);
+            }
+        }
     }
 
     private class GetBlockChildrenMethod implements TemplateMethodModelEx {

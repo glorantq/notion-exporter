@@ -14,6 +14,7 @@
     <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.css" integrity="sha384-zTROYFVGOfTw7JV7KUu8udsvW2fx4lWOsCEDqhBreBwlHI4ioVRtmIvEThzJHGET" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.js" integrity="sha384-GxNFqL3r9uRJQhR+47eDxuPoNE7yLftQM8LcxzgS4HT73tp970WS/wV5p8UzCOmb" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 </head>
 
 <body>
@@ -43,7 +44,7 @@
     </#if>
     <#if page.icon??>
         <div class="header-icon">
-            <@common.getIcon icon=page.icon />
+            <@common.getIcon icon=page.icon imgClass="" />
         </div>
     </#if>
 </div>
@@ -60,34 +61,11 @@
     </div>
 
     <div class="navbar-content navbar-right">
-        <span>[Possibly dark mode?]</span>
+         <span><button id="theme-toggle"></button></span>
     </div>
 </div>
 
-<script>
-    twemoji.parse(document.body);
-
-    let mathElements = document.body.getElementsByClassName("katex-math");
-    for(let math of mathElements) {
-        katex.render(math.innerHTML.replaceAll("&lt;", "<").replaceAll("&gt;", ">"), math, { throwOnError: false });
-    }
-
-    let liCounter = 0;
-    let allElements = document.body.getElementsByClassName("block");
-    for (let element of allElements) {
-        let type = element.getAttribute("data-type");
-        if (type === "NotionNumberedListItemBlock") {
-            element.getElementsByClassName("numbered-list-marker")[0].setAttribute("data-before", `${r"${++liCounter}"}.`);
-        } else {
-            liCounter = 0;
-        }
-    }
-
-    let loaderElements = document.body.getElementsByClassName("loader-container");
-    for (let loader of loaderElements) {
-        loader.classList.toggle("loader-hidden");
-    }
-</script>
+<script defer src="./assets/page.js"></script>
 </body>
 
 </html>

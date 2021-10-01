@@ -60,6 +60,9 @@ public class NotionRichText {
         }
     }
 
+    @Expose
+    private MentionObject mention;
+
     @Getter
     @AllArgsConstructor
     @NoArgsConstructor
