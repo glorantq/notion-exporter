@@ -23,6 +23,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.text.Normalizer;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,20 +37,23 @@ public class NotionExporterImplementation {
     protected final String pageAuthor;
     protected final File outputFolder;
     protected final boolean rewriteIndex;
+    protected final boolean rewriteNames;
 
     protected final List<NotionPage> pagesToExport;
+    protected final Map<String, String> nameMapping;
     protected final Map<String, String> pagePathMapping;
 
     private final LinkResolver linkResolver;
     private final NotionRenderer notionRenderer;
 
-    public NotionExporterImplementation(String integrationKey, String rootPageId, boolean rewriteIndex, boolean followLinks, boolean mirrorAssets, String pageName, String pageAuthor, File outputFolder) {
+    public NotionExporterImplementation(String integrationKey, String rootPageId, boolean rewriteIndex, boolean rewriteNames, boolean followLinks, boolean mirrorAssets, String pageName, String pageAuthor, File outputFolder) {
         this.rootPageId = rootPageId;
         this.followLinks = followLinks;
         this.pageName = pageName;
         this.pageAuthor = pageAuthor;
         this.outputFolder = outputFolder;
         this.rewriteIndex = rewriteIndex;
+        this.rewriteNames = rewriteNames;
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(chain -> {
@@ -74,6 +78,9 @@ public class NotionExporterImplementation {
 
         logger.info("Loading pages...");
         this.pagesToExport = listPagesToExport();
+
+        logger.info("Mapping page names...");
+        this.nameMapping = mapPagesToNames();
 
         logger.info("Creating page-to-path mappings...");
         this.pagePathMapping = getPagePathMapping();
@@ -174,7 +181,34 @@ public class NotionExporterImplementation {
         }
     }
 
-    private List<String> exploredPages = new ArrayList<>();
+    private Map<String, String> mapPagesToNames() {
+        Map<String, String> mapping = new HashMap<>();
+
+        for(NotionPage notionPage : pagesToExport) {
+            String pageId = cleanPageId(notionPage.getPageId().toString());
+            String mappedName;
+
+            if(rewriteNames) {
+                String rawTitle = notionPage.getTitle();
+
+                mappedName = Normalizer.normalize(rawTitle, Normalizer.Form.NFD)
+                        .toLowerCase()
+                        .replaceAll("[^a-zA-Z0-9_\\-\\s:.]", "")
+                        .replaceAll("[\\s\\-_.:]", "-");
+
+                System.out.println(rawTitle);
+                System.out.println(mappedName);
+            } else {
+                mappedName = pageId;
+            }
+
+            mapping.put(pageId, mappedName);
+        }
+
+        return mapping;
+    }
+
+    private final List<String> exploredPages = new ArrayList<>();
 
     private List<NotionPage> listPagesToExport() {
         List<NotionPage> pageList = new ArrayList<>();
@@ -315,6 +349,16 @@ public class NotionExporterImplementation {
         listToAddTo.addAll(filtered);
     }
 
+    private String getPageName(String pageId) {
+        String mappedName = nameMapping.get(pageId);
+
+        if(mappedName == null) {
+            throw new RuntimeException("No name mapping!");
+        }
+
+        return mappedName;
+    }
+
     private Map<String, String> getPagePathMapping() {
         Map<String, String> mapping = new HashMap<>();
 
@@ -328,18 +372,18 @@ public class NotionExporterImplementation {
             if(!hasMappingFor(mapping, pageId)) {
                 NotionParent parent = page.getParent();
                 if(parent.isWorkspace()) {
-                    mapping.put(pageId, "./" + pageId + "/index.html");
+                    mapping.put(pageId, "./" + getPageName(pageId) + "/index.html");
                     continue;
                 }
 
                 if(parent.getPageId() != null) {
                     List<String> pathElements = new ArrayList<>();
                     pathElements.add("index.html");
-                    pathElements.add(pageId);
+                    pathElements.add(getPageName(pageId));
 
                     String parentId = cleanPageId(parent.getPageId());
                     do {
-                        pathElements.add(parentId);
+                        pathElements.add(getPageName(parentId));
 
                         NotionPage parent0 = findPage(parentId);
                         if(parent0 == null || parent0.getParent().isWorkspace()) {

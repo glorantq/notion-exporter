@@ -91,6 +91,12 @@ public class NotionExporter {
                 .action(Arguments.store())
                 .help("Whether to rewrite the root page as index.html or not");
 
+        argumentParser.addArgument("--fancyNames", "-fn")
+                .nargs("?")
+                .type(Boolean.class)
+                .action(Arguments.store())
+                .help("Rewrite page files with human-readable names");
+
         Namespace namespace;
         try {
             namespace = argumentParser.parseArgs(args);
@@ -152,8 +158,9 @@ public class NotionExporter {
             Map<String, Object> exportProperties = parsedConfig.getMap("export");
             String outFolder = getValueFromMap(exportProperties, "folder");
             boolean rewriteIndex = Boolean.parseBoolean(getValueFromMap(exportProperties, "rewriteIndex"));
+            boolean rewriteNames = Boolean.parseBoolean(getValueFromMap(exportProperties, "fancyNames"));
 
-            handleStartup(pageName, pageAuthor, faviconPath, rootNotionPageId, notionIntegrationKey, followLinkedPages, outFolder, rewriteIndex);
+            handleStartup(pageName, pageAuthor, faviconPath, rootNotionPageId, notionIntegrationKey, followLinkedPages, outFolder, rewriteIndex, rewriteNames);
         } catch (Exception e) {
             LOGGER.error("Failed to process configuration!", e);
         }
@@ -187,8 +194,9 @@ public class NotionExporter {
 
             String outFolder = getValueFromNamespace(namespace, "output");
             boolean rewriteIndex = getValueFromNamespace(namespace, "rewriteIndex");
+            boolean rewriteNames = getValueFromNamespace(namespace, "fancyNames");
 
-            handleStartup(pageName, pageAuthor, favicon, rootPageId, notionKey, followLinks, outFolder, rewriteIndex);
+            handleStartup(pageName, pageAuthor, favicon, rootPageId, notionKey, followLinks, outFolder, rewriteIndex, rewriteNames);
         } catch (Exception e) {
             LOGGER.error("Failed to process arguments!", e);
         }
@@ -206,7 +214,7 @@ public class NotionExporter {
     }
 
     private static void handleStartup(String pageName, String pageAuthor, String faviconPath, String rootNotionPageId, String notionIntegrationKey, boolean followLinkedPages,
-                                      String outFolder, boolean rewriteIndex) {
+                                      String outFolder, boolean rewriteIndex, boolean rewriteNames) {
         LOGGER.info("{} {} {} {} {} {} {} {}", pageName, pageAuthor, faviconPath, rootNotionPageId, notionIntegrationKey, followLinkedPages, outFolder, rewriteIndex);
 
         File outputFolder = new File(outFolder);
@@ -234,7 +242,7 @@ public class NotionExporter {
         }
 
         try {
-            NotionExporterImplementation exporterImplementation = new NotionExporterImplementation(notionIntegrationKey, rootNotionPageId, rewriteIndex, followLinkedPages,
+            NotionExporterImplementation exporterImplementation = new NotionExporterImplementation(notionIntegrationKey, rootNotionPageId, rewriteIndex, rewriteNames, followLinkedPages,
                     false, pageName, pageAuthor, outputFolder);
             exporterImplementation.beginRendering();
         } catch (Exception e) {

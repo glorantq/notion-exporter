@@ -10,6 +10,8 @@ html {
     --navbar-link-hover: rgb(55, 53, 47, 0.08);
     --navbar-path-separator: rgba(55, 53, 47, 0.4);
     --block-background: rgb(55, 53, 47, 0.08);
+    --share-background: rgb(235, 235, 235);
+    --share-border: hsla(195, 2%, 60%, 0.95);
     --notion-red: #ff7369;
     --notion-pink: #e255a1;
     --notion-blue: #529cca;
@@ -46,6 +48,8 @@ html.dark-mode {
     --navbar-link-hover: rgba(71, 76, 80);
     --navbar-path-separator: rgba(255, 255, 255, 0.4);
     --block-background: rgba(71, 76, 80);
+    --share-background: rgb(35, 35, 35);
+    --share-border: rgb(30, 30, 30);
 }
 
 
@@ -365,6 +369,7 @@ p {
     margin-top: 0.2rem;
     margin-bottom: 0.2rem;
     display: block;
+    cursor: zoom-in;
 }
 
 
@@ -578,6 +583,108 @@ blockquote.renderer-error img {
     color: var(--text-color);
     font-weight: 600;
     cursor: pointer;
+}
+
+/* Share Modal */
+#share-modal-container {
+    width: 25rem;
+    max-width: 80vw;
+    position: fixed;
+    top: 3.2rem;
+    background: var(--navbar-background);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border: solid 1px var(--share-border);
+    border-radius: 0.3rem;
+    box-shadow: 10px 10px 38px -27px rgba(0,0,0,0.75);
+    -webkit-box-shadow: 10px 10px 38px -27px rgba(0,0,0,0.75);
+    -moz-box-shadow: 10px 10px 38px -27px rgba(0,0,0,0.75);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 0;
+    padding: 0.3rem;
+}
+
+.share-modal-visible {
+    right: 0.35rem;
+    opacity: 1;
+    transition: right 0s, opacity 0.2s 0s;
+}
+
+.share-modal-invisible {
+    right: -300rem;
+    opacity: 0;
+    transition: right 0s 0.2s, opacity 0.2s 0s;
+}
+
+#share-modal-container * {
+    margin: 0.15rem;
+    color: var(--text-color);
+}
+
+#share-modal-container hr {
+    width: 100%;
+    border: none;
+    background: var(--share-border);
+    height: 0.05rem;
+}
+
+#share-modal-text-container {
+    width: 100%;
+    display: flex;
+    flex-direction: row;    
+    margin: 0;
+    padding: 0;
+}
+
+#share-modal-url {
+    width: 100%;
+    border: 1px solid var(--share-border);
+    border-radius: 0.2rem;
+    height: 1.3rem;
+    background: var(--share-background);
+}
+
+#share-modal-copy {
+    border: 1px solid var(--share-border);
+    border-radius: 0.2rem;
+    background: var(--share-background);
+}
+
+#share-modal-buttons {
+    margin: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+#share-modal-buttons svg {
+    stroke-width: 1.7px;
+}
+
+#share-modal-buttons #share-reddit svg {   
+    fill: var(--text-color);
+}
+
+.share-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s linear;
+    border-style: hidden;
+    border-radius: 0.3rem;
+}
+
+.share-button:hover {
+    background: var(--navbar-link-hover);
+}
+
+.share-button * {
+    margin: 0;
+    padding: 0;
 }
 
 
