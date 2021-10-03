@@ -1,2 +1,1 @@
 <a class="block-link" href="${resolvePageLink(block.id, page)}"><i data-feather="file-text"></i><span>${block.title}</span></a>
-<#-- TODO: Implement links -->

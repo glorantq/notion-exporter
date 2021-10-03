@@ -28,7 +28,6 @@
         </#if>
         <span class="navbar-title"><@getPageTitle page=page /></span>
     </a>
-    <#-- TODO: Implement links -->
 </#macro>
 
 <#macro renderBlockEx block page>

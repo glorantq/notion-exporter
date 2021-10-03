@@ -92,6 +92,9 @@
 </div>
 
 <script src="${resolveAssetLink("bundled:///assets/lib/prism.js", page)}"></script>
+<script>
+    Prism.plugins.autoloader.languages_path = "${resolveAssetLink("bundled:///assets/lib/prism-grammars/", page)}/";
+</script>
 <script defer src="${resolveAssetLink("bundled:///assets/page.js", page)}"></script>
 </body>
 

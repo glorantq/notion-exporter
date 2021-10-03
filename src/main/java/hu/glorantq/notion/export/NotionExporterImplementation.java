@@ -276,9 +276,6 @@ public class NotionExporterImplementation {
                         .toLowerCase()
                         .replaceAll("[^a-zA-Z0-9_\\-\\s:.]", "")
                         .replaceAll("[\\s\\-_.:]", "-");
-
-                System.out.println(rawTitle);
-                System.out.println(mappedName);
             } else {
                 mappedName = pageId;
             }
