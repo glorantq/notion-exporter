@@ -243,7 +243,7 @@ public class NotionExporter {
 
         try {
             NotionExporterImplementation exporterImplementation = new NotionExporterImplementation(notionIntegrationKey, rootNotionPageId, rewriteIndex, rewriteNames, followLinkedPages,
-                    false, pageName, pageAuthor, outputFolder);
+                    true, pageName, pageAuthor, outputFolder);
             exporterImplementation.beginRendering();
         } catch (Exception e) {
             LOGGER.error("Failed to fetch page!", e);

@@ -1,5 +1,9 @@
 package hu.glorantq.notion.export;
 
+import com.fewlaps.slimjpg.SlimJpg;
+import com.googlecode.pngtastic.PngtasticOptimizer;
+import com.googlecode.pngtastic.core.PngImage;
+import com.googlecode.pngtastic.core.PngOptimizer;
 import hu.glorantq.notion.api.NotionAPI;
 import hu.glorantq.notion.api.StringConstants;
 import hu.glorantq.notion.api.model.NotionPage;
@@ -11,15 +15,22 @@ import hu.glorantq.notion.api.model.blocks.impl.*;
 import hu.glorantq.notion.render.NotionRenderer;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.lang.reflect.Field;
 import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -46,6 +57,9 @@ public class NotionExporterImplementation {
     private final LinkResolver linkResolver;
     private final NotionRenderer notionRenderer;
 
+    private final Map<String, String> mirroredFiles = new HashMap<>();
+    private final PngOptimizer pngOptimizer = new PngOptimizer();
+
     public NotionExporterImplementation(String integrationKey, String rootPageId, boolean rewriteIndex, boolean rewriteNames, boolean followLinks, boolean mirrorAssets, String pageName, String pageAuthor, File outputFolder) {
         this.rootPageId = rootPageId;
         this.followLinks = followLinks;
@@ -57,6 +71,10 @@ public class NotionExporterImplementation {
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(chain -> {
+                    if(!chain.request().url().toString().contains(StringConstants.API_BASE_URL)) {
+                        return chain.proceed(chain.request());
+                    }
+
                     Request original = chain.request();
 
                     Request newRequest = original.newBuilder()
@@ -106,7 +124,70 @@ public class NotionExporterImplementation {
                 }
 
                 if(mirrorAssets) {
-                    logger.warn("Mirroring not yet supported!");
+                    try {
+                        URL url = new URL(rawUrl);
+
+                        String fileExtension = FilenameUtils.getExtension(url.getPath());
+                        String fileName = FilenameUtils.getName(url.getPath());
+                        String baseName = FilenameUtils.getBaseName(url.getPath());
+
+                        Request request = new Request.Builder()
+                                .url(url)
+                                .get()
+                                .build();
+
+                        Response response = okHttpClient.newCall(request).execute();
+                        ResponseBody responseBody = response.body();
+                        byte[] fileBytes = responseBody.bytes();
+                        responseBody.close();
+
+                        String fileHash = DigestUtils.sha1Hex(fileBytes).toLowerCase();
+                        if(mirroredFiles.containsKey(fileHash)) {
+                            logger.info("Got cache hit for {}!", fileName);
+
+                            return resolveRelativeToOutput(currentPage, mirroredFiles.get(fileHash));
+                        }
+
+                        File mirrorDirectory = new File(outputFolder, "mirror");
+                        if(!mirrorDirectory.exists()) {
+                            mirrorDirectory.mkdirs();
+                        }
+
+                        File outputFile = new File(mirrorDirectory, fileHash + "-" + baseName + "." + fileExtension);
+                        FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+
+                        if(fileExtension.equalsIgnoreCase("png")) {
+                            logger.info("PNG-optimizing {}...", fileName);
+
+                            PngImage pngImage = new PngImage(new ByteArrayInputStream(fileBytes));
+                            pngOptimizer.optimize(pngImage);
+
+                            pngImage.writeDataOutputStream(fileOutputStream);
+                        } else if(fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("jpeg") || fileExtension.equalsIgnoreCase("bmp")) {
+                            logger.info("JPEG-optimizing {}...", fileName);
+
+                            byte[] optimizedData = SlimJpg.file(fileBytes)
+                                    .maxVisualDiff(0.5d)
+                                    .deleteMetadata()
+                                    .optimize()
+                                    .getPicture();
+
+                            fileOutputStream.write(optimizedData);
+                        } else {
+                            logger.info("Mirroring {}...", fileName);
+                            
+                            fileOutputStream.write(fileBytes);
+                        }
+
+                        fileOutputStream.close();
+
+                        String relativePath = mirrorDirectory.getName() + "/" + outputFile.getName();
+                        mirroredFiles.put(fileHash, relativePath);
+
+                        return resolveRelativeToOutput(currentPage, relativePath);
+                    } catch (Exception e) {
+                        logger.error("Failed to mirror URL!", e);
+                    }
                 }
 
                 return rawUrl;

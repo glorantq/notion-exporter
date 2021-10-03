@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="${resolveAssetLink("bundled:///assets/lib/katex.min.css", page)}">
     <link rel="stylesheet" id="prism-stylesheet" href="">
 
-    <#-- TODO: Mirror -->
     <script src="${resolveAssetLink("bundled:///assets/lib/twemoji.min.js", page)}"></script>
     <script src="${resolveAssetLink("bundled:///assets/lib/katex.min.js", page)}"></script>
     <script src="${resolveAssetLink("bundled:///assets/lib/feather.min.js", page)}"></script>
