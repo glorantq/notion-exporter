@@ -105,6 +105,8 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0.7rem;
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
     margin: 0;
     overflow: hidden;
     max-width: 100%;
@@ -204,7 +206,8 @@ body {
 
 .header-icon img {
     width: 100%;
-    object-fit: fill;
+    height: 100%;
+    object-fit: cover;
     object-position: center;
 }
 
@@ -238,6 +241,19 @@ body {
 
 .block * {
     white-space: normal;
+}
+
+.block img.emoji {
+    height: 1em;
+    width: 1em;
+    margin: 0 .05em 0 .1em;
+    vertical-align: -0.1em;
+}
+
+.block a:not(.block-link) {
+    text-decoration: none;
+    color: var(--notion-gray);
+    border-bottom: solid 1px var(--notion-gray);
 }
 
 h1 {
@@ -340,6 +356,15 @@ p {
 
 .block-link:hover {
     background-color: var(--navbar-link-hover);
+}
+
+.image-block {
+    max-width: 75%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+    display: block;
 }
 
 
@@ -484,7 +509,7 @@ blockquote.renderer-error img {
 
 /* Theme Button */
 
-#theme-toggle {
+.navbar-button {
     margin: 0;
     padding: 0.2rem;
     font-size: 1rem;
@@ -496,18 +521,63 @@ blockquote.renderer-error img {
     border-radius: 0.3rem;
 }
 
-#theme-toggle .feather {
+.navbar-button .feather {
     width: 1.2rem;
     height: 1.2rem;
 }
 
-#theme-toggle:hover {
+.navbar-button:hover {
     background-color: var(--navbar-link-hover);
 }
 
-.navbar-container.footer {
-    padding-top: 0.55rem;
-    padding-bottom: 0.55rem;
+
+/* Image Popup */
+
+#image-popup-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    background-color: var(--navbar-background);
+    backdrop-filter: brightness(0.8) blur(3px);
+    -webkit-backdrop-filter: brightness(0.8) blur(3px);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    display: flex;
+}
+
+#image-popup-container.image-popup-invisible {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    transition: width 0s 0.2s, height 0s 0.2s, opacity 0.2s linear;
+}
+
+#image-popup-container.image-popup-visible {
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transition: width 0s 0s, height 0s 0s, opacity 0.2s linear;
+}
+
+#image-popup-container #image-popup {
+    margin: 0;
+    padding: 0;
+    max-width: 75%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+#image-popup-close {
+    position: fixed;
+    top: 0;
+    right: 0;
+    margin: 1rem;
+    color: var(--text-color);
+    font-weight: 600;
+    cursor: pointer;
 }
 
 

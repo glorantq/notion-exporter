@@ -6,6 +6,8 @@ import hu.glorantq.notion.api.model.NotionPage;
 import hu.glorantq.notion.api.model.NotionPaginatedResponse;
 import hu.glorantq.notion.api.model.blocks.NotionBlock;
 import hu.glorantq.notion.api.model.blocks.NotionNotImplementedBlock;
+import hu.glorantq.notion.export.LinkResolver;
+import hu.glorantq.notion.export.NotionExporterImplementation;
 import hu.glorantq.notion.render.NotionRenderer;
 import me.grison.jtoml.impl.Toml;
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -21,6 +23,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -230,43 +233,10 @@ public class NotionExporter {
             }
         }
 
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .addInterceptor(chain -> {
-                    Request original = chain.request();
-
-                    Request newRequest = original.newBuilder()
-                            .addHeader("Notion-Version", StringConstants.NOTION_API_VERSION)
-                            .addHeader("Authorization", "Bearer " + notionIntegrationKey)
-                            .build();
-
-                    return chain.proceed(newRequest);
-                })
-                .build();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(StringConstants.API_BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(okHttpClient)
-                .build();
-
-        NotionAPI notionAPI = retrofit.create(NotionAPI.class);
-
         try {
-            NotionPage rootPage = notionAPI.retrievePage(rootNotionPageId).execute().body();
-            LOGGER.info("{}", rootPage);
-
-            NotionBlock pageBlock = notionAPI.retrieveBlock(rootNotionPageId).execute().body();
-            LOGGER.info("{}", pageBlock);
-
-            NotionPaginatedResponse<NotionBlock> pageChildren = notionAPI.retrieveBlockChildren(rootNotionPageId, 100).execute().body();
-            LOGGER.info("{}", pageChildren);
-
-            NotionRenderer notionRenderer = new NotionRenderer(notionAPI, pageAuthor, pageName);
-            notionRenderer.registerDefaultRenderers();
-
-            String renderedPage = notionRenderer.renderPage(rootPage);
-            File outFile = new File(outputFolder, "test.html");
-            Files.write(outFile.toPath(), renderedPage.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            NotionExporterImplementation exporterImplementation = new NotionExporterImplementation(notionIntegrationKey, rootNotionPageId, rewriteIndex, followLinkedPages,
+                    false, pageName, pageAuthor, outputFolder);
+            exporterImplementation.beginRendering();
         } catch (Exception e) {
             LOGGER.error("Failed to fetch page!", e);
         }

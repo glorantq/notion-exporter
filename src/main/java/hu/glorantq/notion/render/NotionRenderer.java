@@ -8,6 +8,7 @@ import hu.glorantq.notion.api.model.NotionPage;
 import hu.glorantq.notion.api.model.NotionPaginatedResponse;
 import hu.glorantq.notion.api.model.blocks.NotionBlock;
 import hu.glorantq.notion.api.model.blocks.impl.*;
+import hu.glorantq.notion.export.LinkResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,7 @@ import java.util.*;
 public class NotionRenderer {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final NotionAPI notionAPI;
+    private final LinkResolver linkResolver;
 
     private final String pageAuthor;
     private final String pageName;
@@ -25,8 +27,9 @@ public class NotionRenderer {
 
     private final Map<Class<? extends NotionBlock>, BlockRenderer> blockRendererMappings = new HashMap<>();
 
-    public NotionRenderer(NotionAPI notionAPI, String pageAuthor, String pageName) {
+    public NotionRenderer(NotionAPI notionAPI, LinkResolver linkResolver, String pageAuthor, String pageName) {
         this.notionAPI = notionAPI;
+        this.linkResolver = linkResolver;
         this.pageAuthor = pageAuthor;
         this.pageName = pageName;
 
@@ -51,6 +54,8 @@ public class NotionRenderer {
         addBlockRenderer(NotionBulletedListItemBlock.class, new FreemarkerBlockRenderer<NotionBulletedListItemBlock>("blocks/bulletedListItem.ftlh"));
         addBlockRenderer(NotionNumberedListItemBlock.class, new FreemarkerBlockRenderer<NotionNumberedListItemBlock>("blocks/numberedListItem.ftlh"));
         addBlockRenderer(NotionChildPageBlock.class, new FreemarkerBlockRenderer<NotionChildPageBlock>("blocks/childPage.ftlh"));
+        addBlockRenderer(NotionImageBlock.class, new FreemarkerBlockRenderer<NotionImageBlock>("blocks/image.ftlh"));
+        addBlockRenderer(NotionCodeBlock.class, new FreemarkerBlockRenderer<NotionCodeBlock>("blocks/code.ftlh"));
 
         // TODO: Add blocks
     }
@@ -91,16 +96,6 @@ public class NotionRenderer {
         }
     }
 
-    public String renderBlock(NotionBlock notionBlock) {
-        BlockRenderer blockRenderer = blockRendererMappings.get(notionBlock.getClass());
-        if(blockRenderer == null) {
-            logger.error("No renderer registered for {}!", notionBlock.getClass().getName());
-            return "";
-        }
-
-        return blockRenderer.renderBlock(notionBlock);
-    }
-
     public void addBlockRenderer(Class<? extends NotionBlock> blockType, BlockRenderer blockRenderer) {
         if(blockRendererMappings.containsKey(blockType)) {
             logger.error("A renderer is already registered for block type: {}!", blockType.getName());
@@ -115,6 +110,8 @@ public class NotionRenderer {
         dataModel.put("renderBlock", new RenderBlockMethod());
         dataModel.put("getBlockChildren", new GetBlockChildrenMethod());
         dataModel.put("fetchPage", new FetchPageMethod());
+        dataModel.put("resolveAssetLink", new ResolveAssetLinkMethod());
+        dataModel.put("resolvePageLink", new ResolvePageLinkMethod());
     }
 
     private class FreemarkerBlockRenderer<T extends NotionBlock> implements BlockRenderer {
@@ -125,12 +122,13 @@ public class NotionRenderer {
         }
 
         @Override
-        public String renderBlock(NotionBlock notionBlock) {
+        public String renderBlock(NotionBlock notionBlock, NotionPage notionPage) {
             try {
                 Template blockTemplate = freemarkerConfiguration.getTemplate(templatePath, Locale.forLanguageTag("hu"), "UTF-8");
 
                 Map<String, Object> dataModel = new HashMap<>();
                 dataModel.put("block", notionBlock);
+                dataModel.put("page", notionPage);
                 addTemplateMethods(dataModel);
 
                 StringWriter stringWriter = new StringWriter();
@@ -143,6 +141,15 @@ public class NotionRenderer {
         }
     }
 
+    private void renderException0(Throwable e, StringBuilder stringBuilder) {
+        stringBuilder.append("<pre>");
+        for(StackTraceElement traceElement : e.getStackTrace()) {
+            stringBuilder.append(traceElement.toString().replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
+            stringBuilder.append("\n");
+        }
+        stringBuilder.append("</pre>");
+    }
+
     private String renderException(Exception e) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("<html>");
@@ -151,18 +158,70 @@ public class NotionRenderer {
         stringBuilder.append("<title>").append(pageName).append(" - Error").append("</title>");
         stringBuilder.append("</head>");
         stringBuilder.append("<body>");
-        stringBuilder.append("<h2>").append(e.getMessage()).append("</h2>");
+        stringBuilder.append("<h2 style=\"white-space: pre;\">").append(e.getMessage()).append("</h2>");
         stringBuilder.append("<hr />");
-        stringBuilder.append("<pre>");
-        for(StackTraceElement traceElement : e.getStackTrace()) {
-            stringBuilder.append(traceElement.toString().replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
-            stringBuilder.append("\n");
+        renderException0(e, stringBuilder);
+
+        Throwable cause = e.getCause();
+        while(cause != null) {
+            stringBuilder.append("<h3>Caused by: ").append(cause.getMessage()).append("</h3>");
+            renderException0(cause, stringBuilder);
+
+            cause = cause.getCause();
         }
-        stringBuilder.append("</pre>");
+
         stringBuilder.append("<body>");
         stringBuilder.append("</html>");
 
         return stringBuilder.toString();
+    }
+
+    private class ResolvePageLinkMethod implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 2) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel pageIdModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) pageIdModel;
+            String pageId = scalarModel.getAsString();
+
+            TemplateModel pageArgumentModel = (TemplateModel) arguments.get(1);
+            Object unwrapped = ((BeansWrapper) freemarkerConfiguration.getObjectWrapper()).unwrap(pageArgumentModel);
+
+            if(!(unwrapped instanceof NotionPage)) {
+                throw new TemplateModelException("Invalid type!");
+            }
+
+            String ownPageId = ((NotionPage) unwrapped).getPageId().toString();
+
+            return linkResolver.resolvePageLink(pageId, ownPageId);
+        }
+    }
+
+    private class ResolveAssetLinkMethod implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 2) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel pageIdModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) pageIdModel;
+            String rawUrl = scalarModel.getAsString();
+
+            TemplateModel pageArgumentModel = (TemplateModel) arguments.get(1);
+            Object unwrapped = ((BeansWrapper) freemarkerConfiguration.getObjectWrapper()).unwrap(pageArgumentModel);
+
+            if(!(unwrapped instanceof NotionPage)) {
+                throw new TemplateModelException("Invalid type!");
+            }
+
+            String pageId = ((NotionPage) unwrapped).getPageId().toString();
+
+            return linkResolver.resolveAssetLink(rawUrl, pageId);
+        }
     }
 
     private class FetchPageMethod implements TemplateMethodModelEx {
@@ -231,7 +290,7 @@ public class NotionRenderer {
     private class RenderBlockMethod implements TemplateMethodModelEx {
         @Override
         public Object exec(List arguments) throws TemplateModelException {
-            if(arguments.size() != 1) {
+            if(arguments.size() != 2) {
                 throw new TemplateModelException("Invalid parameters!");
             }
 
@@ -242,11 +301,18 @@ public class NotionRenderer {
                 throw new TemplateModelException("Invalid type!");
             }
 
+            TemplateModel pageArgumentModel = (TemplateModel) arguments.get(1);
+            Object unwrapped0 = ((BeansWrapper) freemarkerConfiguration.getObjectWrapper()).unwrap(pageArgumentModel);
+
+            if(!(unwrapped0 instanceof NotionPage)) {
+                throw new TemplateModelException("Invalid type!");
+            }
+
             Class<? extends NotionBlock> typeClass = (Class<? extends NotionBlock>) unwrapped.getClass();
             BlockRenderer blockRenderer = blockRendererMappings.get(typeClass);
 
             if(blockRenderer != null) {
-                return blockRenderer.renderBlock((NotionBlock) unwrapped);
+                return blockRenderer.renderBlock((NotionBlock) unwrapped, (NotionPage) unwrapped0);
             } else {
                 return "<blockquote class=\"renderer-error\">\u274C No renderer for: " + typeClass.getSimpleName() + "!</blockquote>";
             }
@@ -254,6 +320,6 @@ public class NotionRenderer {
     }
 
     public interface BlockRenderer {
-        String renderBlock(NotionBlock notionBlock);
+        String renderBlock(NotionBlock notionBlock, NotionPage page);
     }
 }

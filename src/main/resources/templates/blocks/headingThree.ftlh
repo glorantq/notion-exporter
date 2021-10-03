@@ -1,2 +1,2 @@
 <#import "richText.ftlh" as richText>
-<h3><#list block.text as text><@richText.renderRichText richText=text /></#list></h3>
+<h3><#list block.text as text><@richText.renderRichText richText=text page=page /></#list></h3>

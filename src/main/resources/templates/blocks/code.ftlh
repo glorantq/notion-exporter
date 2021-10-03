@@ -1,0 +1,2 @@
+<#import "./richText.ftlh" as richText>
+<pre class="line-numbers"><code class="language-${block.language?string?lower_case}"><#list block.text as text><@richText.renderRichText richText=text page=page /></#list></code></pre>

@@ -18,6 +18,18 @@ function toggleDarkMode() {
 
     window.localStorage.setItem("dark-mode", isDarkMode);
     feather.replace();
+    updatePrismStylesheet();
+}
+
+function updatePrismStylesheet() {
+    let stylesheetLink = document.getElementById("prism-stylesheet");
+
+    let isDarkMode = window.localStorage.getItem("dark-mode") === "true";
+    if (isDarkMode === undefined) {
+        isDarkMode = false;
+    }
+
+    stylesheetLink.href = isDarkMode ? prismStylesheets.dark : prismStylesheets.light;
 }
 
 twemoji.parse(document.body);
@@ -55,11 +67,35 @@ if (isDarkMode) {
 }
 
 window.localStorage.setItem("dark-mode", isDarkMode);
-themeToggle.addEventListener("click", toggleDarkMode);
+themeToggle.addEventListener("click", toggleDarkMode, false);
 feather.replace();
+updatePrismStylesheet();
+
+let imagePopupContainer = document.getElementById("image-popup-container");
+let imagePopup = document.getElementById("image-popup");
+let imagePopupClose = document.getElementById("image-popup-close");
 
 let imageElements = document.getElementsByClassName("image-block");
-fo
+for (let imageElement of imageElements) {
+    imageElement.addEventListener("click", (event) => {
+        let clickedElement = event.currentTarget;
+        imagePopup.src = clickedElement.src;
+
+        imagePopupContainer.className = "image-popup-visible";
+    }, false);
+}
+
+imagePopupClose.addEventListener("click", () => {
+    imagePopupContainer.className = "image-popup-invisible";
+}, false);
+
+imagePopup.addEventListener("click", (event) => {
+    event.stopPropagation();
+}, false);
+
+imagePopupContainer.addEventListener("click", () => {
+    imagePopupContainer.className = "image-popup-invisible";
+}, false);
 
 let loaderElements = document.body.getElementsByClassName("loader-container");
 for (let loader of loaderElements) {

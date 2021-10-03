@@ -9,6 +9,7 @@ import lombok.ToString;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /*
@@ -52,4 +53,21 @@ public class NotionPage {
 
     @Expose
     private String url;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NotionPage that = (NotionPage) o;
+        return Objects.equals(pageId, that.pageId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pageId);
+    }
+
+    public String getTitle() {
+        return properties.get("title").getTitle().get(0).getPlainText();
+    }
 }
