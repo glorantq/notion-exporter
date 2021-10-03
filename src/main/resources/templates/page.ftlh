@@ -13,16 +13,9 @@
     <link rel="stylesheet" href="${resolveAssetLink("bundled:///assets/lib/katex.min.css", page)}">
     <link rel="stylesheet" id="prism-stylesheet" href="">
 
-    <script src="${resolveAssetLink("bundled:///assets/lib/twemoji.min.js", page)}"></script>
-    <script src="${resolveAssetLink("bundled:///assets/lib/katex.min.js", page)}"></script>
+    <script defer src="${resolveAssetLink("bundled:///assets/lib/twemoji.min.js", page)}"></script>
+    <script defer src="${resolveAssetLink("bundled:///assets/lib/katex.min.js", page)}"></script>
     <script src="${resolveAssetLink("bundled:///assets/lib/feather.min.js", page)}"></script>
-
-    <script>
-        let prismStylesheets = {
-            light: "${resolveAssetLink("bundled:///assets/lib/prism.css", page)}",
-            dark: "${resolveAssetLink("bundled:///assets/lib/prism-dark.css", page)}"
-        }
-    </script>
 </head>
 
 <body>
@@ -93,6 +86,11 @@
 
 <script src="${resolveAssetLink("bundled:///assets/lib/prism.js", page)}"></script>
 <script>
+    let prismStylesheets = {
+        light: "${resolveAssetLink("bundled:///assets/lib/prism.css", page)}",
+        dark: "${resolveAssetLink("bundled:///assets/lib/prism-dark.css", page)}"
+    }
+
     Prism.plugins.autoloader.languages_path = "${resolveAssetLink("bundled:///assets/lib/prism-grammars/", page)}/";
 </script>
 <script defer src="${resolveAssetLink("bundled:///assets/page.js", page)}"></script>

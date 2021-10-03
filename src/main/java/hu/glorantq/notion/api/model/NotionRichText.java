@@ -71,8 +71,6 @@ public class NotionRichText {
         @Expose
         private Type type;
 
-        // TODO: Proper implementation
-
         @Expose
         private Map<String, Object> user;
 
