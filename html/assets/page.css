@@ -7,9 +7,9 @@ html {
     --selection-color: rgba(45, 170, 219, 0.3);
     --navbar-background: rgba(255, 255, 255, 0.8);
     --content-margin: 30vw;
-    --navbar-link-hover: rgb(55, 53, 47, 0.08);
+    --navbar-link-hover: rgba(55, 53, 47, 0.08); /* TODO: rgba */
     --navbar-path-separator: rgba(55, 53, 47, 0.4);
-    --block-background: rgb(55, 53, 47, 0.08);
+    --block-background: rgba(55, 53, 47, 0.08);
     --share-background: rgb(235, 235, 235);
     --share-border: hsla(195, 2%, 60%, 0.95);
     --notion-red: #ff7369;
