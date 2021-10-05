@@ -7,7 +7,7 @@ html {
     --selection-color: rgba(45, 170, 219, 0.3);
     --navbar-background: rgba(255, 255, 255, 0.8);
     --content-margin: 30vw;
-    --navbar-link-hover: rgba(55, 53, 47, 0.08); /* TODO: rgba */
+    --navbar-link-hover: rgba(55, 53, 47, 0.08);
     --navbar-path-separator: rgba(55, 53, 47, 0.4);
     --block-background: rgba(55, 53, 47, 0.08);
     --share-background: rgb(235, 235, 235);
