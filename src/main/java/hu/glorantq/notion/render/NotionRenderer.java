@@ -1,9 +1,11 @@
 package hu.glorantq.notion.render;
 
+import freemarker.core.Environment;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.ext.beans.BeansWrapperBuilder;
 import freemarker.template.*;
 import hu.glorantq.notion.api.NotionAPI;
+import hu.glorantq.notion.api.model.NotionFile;
 import hu.glorantq.notion.api.model.NotionPage;
 import hu.glorantq.notion.api.model.NotionPaginatedResponse;
 import hu.glorantq.notion.api.model.blocks.NotionBlock;
@@ -56,6 +58,9 @@ public class NotionRenderer {
         addBlockRenderer(NotionChildPageBlock.class, new FreemarkerBlockRenderer<NotionChildPageBlock>("blocks/childPage.ftlh"));
         addBlockRenderer(NotionImageBlock.class, new FreemarkerBlockRenderer<NotionImageBlock>("blocks/image.ftlh"));
         addBlockRenderer(NotionCodeBlock.class, new FreemarkerBlockRenderer<NotionCodeBlock>("blocks/code.ftlh"));
+        addBlockRenderer(NotionCalloutBlock.class, new FreemarkerBlockRenderer<NotionCalloutBlock>("blocks/callout.ftlh"));
+        addBlockRenderer(NotionFileBlock.class, new FreemarkerBlockRenderer<NotionFileBlock>("blocks/file.ftlh"));
+        addBlockRenderer(NotionEquationBlock.class, new FreemarkerBlockRenderer<NotionEquationBlock>("blocks/equation.ftlh"));
 
         // TODO: Add blocks
     }

@@ -2,8 +2,11 @@ package hu.glorantq.notion.api.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import hu.glorantq.notion.api.model.blocks.NotionBlock;
 import lombok.*;
+import org.apache.commons.io.FilenameUtils;
 
+import java.net.URL;
 import java.util.Date;
 
 /*

@@ -34,6 +34,10 @@ public class NotionBlockDeserializer implements JsonDeserializer<NotionBlock> {
                 JsonObject blockJsonRepresentation = blockObject.get(typeName).getAsJsonObject();
 
                 returnValue = createdInstance.deserialize(blockJsonRepresentation, context);
+
+                if(typeEnum == NotionBlock.Type.EQUATION) {
+                    System.out.println(blockObject.toString());
+                }
             } catch (Exception e0) {
                 throw new JsonParseException("Failed to instantiate type-specific block object! " + typeName, e0);
             }

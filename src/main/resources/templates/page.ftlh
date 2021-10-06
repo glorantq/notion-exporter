@@ -3,7 +3,7 @@
 <html lang="hu">
 
 <head>
-    <title>${pageName} - <@common.getPageTitle page=page /></title>
+    <title><@common.getPageTitle page=page /> - ${pageName}</title>
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

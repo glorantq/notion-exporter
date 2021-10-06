@@ -1,0 +1,2 @@
+<#import "../common.ftl" as common>
+<a class="block-link" href="<@common.getUrlFromFile file=block.fileObject page=page />" target="_blank" download="${block.getTitle()}"><i data-feather="link"></i><span>${block.getTitle()}</span></a>

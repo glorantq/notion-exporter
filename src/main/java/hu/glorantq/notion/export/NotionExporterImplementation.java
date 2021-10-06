@@ -40,21 +40,18 @@ import java.util.stream.Collectors;
 
 public class NotionExporterImplementation {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    protected final NotionAPI notionAPI;
+    private final NotionAPI notionAPI;
 
-    protected final String rootPageId;
-    protected final boolean followLinks;
-    protected final String pageName;
-    protected final String pageAuthor;
-    protected final File outputFolder;
-    protected final boolean rewriteIndex;
-    protected final boolean rewriteNames;
+    private final String rootPageId;
+    private final boolean followLinks;
+    private final File outputFolder;
+    private final boolean rewriteIndex;
+    private final boolean rewriteNames;
 
-    protected final List<NotionPage> pagesToExport;
-    protected final Map<String, String> nameMapping;
-    protected final Map<String, String> pagePathMapping;
+    private final List<NotionPage> pagesToExport;
+    private final Map<String, String> nameMapping;
+    private final Map<String, String> pagePathMapping;
 
-    private final LinkResolver linkResolver;
     private final NotionRenderer notionRenderer;
 
     private final Map<String, String> mirroredFiles = new HashMap<>();
@@ -63,8 +60,6 @@ public class NotionExporterImplementation {
     public NotionExporterImplementation(String integrationKey, String rootPageId, boolean rewriteIndex, boolean rewriteNames, boolean followLinks, boolean mirrorAssets, String pageName, String pageAuthor, File outputFolder) {
         this.rootPageId = rootPageId;
         this.followLinks = followLinks;
-        this.pageName = pageName;
-        this.pageAuthor = pageAuthor;
         this.outputFolder = outputFolder;
         this.rewriteIndex = rewriteIndex;
         this.rewriteNames = rewriteNames;
@@ -103,11 +98,11 @@ public class NotionExporterImplementation {
         logger.info("Creating page-to-path mappings...");
         this.pagePathMapping = getPagePathMapping();
 
-        this.linkResolver = new LinkResolver() {
+        LinkResolver linkResolver = new LinkResolver() {
             @Override
             public String resolveAssetLink(String rawUrl, String ownPageId) {
                 String ownPagePath = pagePathMapping.get(cleanPageId(ownPageId));
-                if(ownPagePath == null) {
+                if (ownPagePath == null) {
                     logger.error("Invalid own page path!");
                     return rawUrl;
                 }
@@ -116,14 +111,14 @@ public class NotionExporterImplementation {
 
                 try {
                     URI uri = new URI(rawUrl);
-                    if(uri.getScheme().equalsIgnoreCase("bundled")) {
+                    if (uri.getScheme().equalsIgnoreCase("bundled")) {
                         return resolveRelativeToOutput(currentPage, uri.getPath());
                     }
                 } catch (Exception e) {
                     logger.error("Failed to resolve asset link!", e);
                 }
 
-                if(mirrorAssets) {
+                if (mirrorAssets) {
                     try {
                         URL url = new URL(rawUrl);
 
@@ -142,28 +137,28 @@ public class NotionExporterImplementation {
                         responseBody.close();
 
                         String fileHash = DigestUtils.sha1Hex(fileBytes).toLowerCase();
-                        if(mirroredFiles.containsKey(fileHash)) {
+                        if (mirroredFiles.containsKey(fileHash)) {
                             logger.info("Got cache hit for {}!", fileName);
 
                             return resolveRelativeToOutput(currentPage, mirroredFiles.get(fileHash));
                         }
 
                         File mirrorDirectory = new File(outputFolder, "mirror");
-                        if(!mirrorDirectory.exists()) {
+                        if (!mirrorDirectory.exists()) {
                             mirrorDirectory.mkdirs();
                         }
 
                         File outputFile = new File(mirrorDirectory, fileHash + "-" + baseName + "." + fileExtension);
                         FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
 
-                        if(fileExtension.equalsIgnoreCase("png")) {
+                        if (fileExtension.equalsIgnoreCase("png")) {
                             logger.info("PNG-optimizing {}...", fileName);
 
                             PngImage pngImage = new PngImage(new ByteArrayInputStream(fileBytes));
                             pngOptimizer.optimize(pngImage);
 
                             pngImage.writeDataOutputStream(fileOutputStream);
-                        } else if(fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("jpeg") || fileExtension.equalsIgnoreCase("bmp")) {
+                        } else if (fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("jpeg") || fileExtension.equalsIgnoreCase("bmp")) {
                             logger.info("JPEG-optimizing {}...", fileName);
 
                             byte[] optimizedData = SlimJpg.file(fileBytes)
@@ -175,7 +170,7 @@ public class NotionExporterImplementation {
                             fileOutputStream.write(optimizedData);
                         } else {
                             logger.info("Mirroring {}...", fileName);
-                            
+
                             fileOutputStream.write(fileBytes);
                         }
 
@@ -196,12 +191,12 @@ public class NotionExporterImplementation {
             @Override
             public String resolvePageLink(String pageId, String ownPageId) {
                 String mapping = pagePathMapping.get(cleanPageId(pageId));
-                if(mapping == null) {
+                if (mapping == null) {
                     throw new RuntimeException("No mapping exists for " + pageId + "!");
                 }
 
                 String ownPagePath = pagePathMapping.get(cleanPageId(ownPageId));
-                if(ownPagePath == null) {
+                if (ownPagePath == null) {
                     logger.error("Invalid own page path!");
                     return mapping;
                 }
@@ -209,11 +204,11 @@ public class NotionExporterImplementation {
                 File currentPage = new File(outputFolder, ownPagePath);
 
                 String path = resolveRelativeToOutput(currentPage, mapping);
-                if(path.endsWith("index.html")) {
+                if (path.endsWith("index.html")) {
                     path = path.substring(0, path.length() - "index.html".length());
                 }
 
-                if(path.length() == 0) {
+                if (path.length() == 0) {
                     path = "#";
                 }
 
