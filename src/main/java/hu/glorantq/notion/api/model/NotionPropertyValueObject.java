@@ -1,6 +1,7 @@
 package hu.glorantq.notion.api.model;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import lombok.ToString;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /*
@@ -18,6 +20,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@JsonAdapter(NotionPropertyValueObjectDeserializer.class)
 public class NotionPropertyValueObject {
     @Expose
     private String id;

@@ -391,12 +391,17 @@ p {
 }
 
 .callout-content {
-	height: 100%;
-	overflow-wrap: anywhere;
+    height: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    overflow: auto;
 }
 
 .callout-content > * {
 	margin: 0.3rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    overflow: auto;
 }
 
 .block-equation {

@@ -1,14 +1,6 @@
-<#macro getPageTitle page>
-    ${page.properties.title.title[0].plainText}
-</#macro>
+<#macro getPageTitle page>${page.getTitle()}</#macro>
 
-<#macro getUrlFromFile file page>
-    <#if file.fileType.name() == "EXTERNAL">
-        ${resolveAssetLink(file.externalData.externalUrl, page)}
-    <#else>
-        ${resolveAssetLink(file.hostedData.hostedUrl, page)}
-    </#if>
-</#macro>
+<#macro getUrlFromFile file page><#if file.fileType.name() == "EXTERNAL">${resolveAssetLink(file.externalData.externalUrl, page)}<#else>${resolveAssetLink(file.hostedData.hostedUrl, page)}</#if></#macro>
 
 <#macro getIcon icon imgClass page>
     <#if icon.type.name() == "EMOJI">

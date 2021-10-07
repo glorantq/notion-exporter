@@ -5,6 +5,7 @@ import com.googlecode.pngtastic.PngtasticOptimizer;
 import com.googlecode.pngtastic.core.PngImage;
 import com.googlecode.pngtastic.core.PngOptimizer;
 import hu.glorantq.notion.api.NotionAPI;
+import hu.glorantq.notion.api.QueryDatabaseBody;
 import hu.glorantq.notion.api.StringConstants;
 import hu.glorantq.notion.api.model.NotionPage;
 import hu.glorantq.notion.api.model.NotionPaginatedResponse;
@@ -88,6 +89,16 @@ public class NotionExporterImplementation {
                 .build();
 
         this.notionAPI = retrofit.create(NotionAPI.class);
+
+        try {
+            NotionPage testDatabase = notionAPI.retrieveDatabase("d7a88c70129d475dbff6a1ef5ee4334d").execute().body();
+            System.out.println(testDatabase);
+
+            NotionPaginatedResponse<NotionPage> paginatedResponse = notionAPI.queryDatabase("d7a88c70129d475dbff6a1ef5ee4334d", new QueryDatabaseBody()).execute().body();
+            System.out.println(paginatedResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         logger.info("Loading pages...");
         this.pagesToExport = listPagesToExport();
@@ -192,7 +203,8 @@ public class NotionExporterImplementation {
             public String resolvePageLink(String pageId, String ownPageId) {
                 String mapping = pagePathMapping.get(cleanPageId(pageId));
                 if (mapping == null) {
-                    throw new RuntimeException("No mapping exists for " + pageId + "!");
+                    logger.error("No mapping exists for " + pageId + "!");
+                    return "#";
                 }
 
                 String ownPagePath = pagePathMapping.get(cleanPageId(ownPageId));
@@ -365,6 +377,25 @@ public class NotionExporterImplementation {
                 continue;
             }
 
+            if(block instanceof NotionChildDatabaseBlock) {
+                if(exploredPages.contains(cleanPageId(block.getId().toString()))) {
+                    continue;
+                }
+
+                NotionPage childDatabase = notionAPI.retrieveDatabase(block.getId().toString()).execute().body();
+
+                if(!linkedPages.contains(childDatabase)) {
+                    linkedPages.add(childDatabase);
+                }
+
+                if(childDatabase == null) {
+                    continue;
+                }
+
+                exploredPages.add(cleanPageId(childDatabase.getPageId().toString()));
+                continue;
+            }
+
             if(linkableTypes.contains(block.getClass())) {
                 Field textListField = block.getClass().getDeclaredField("text");
                 textListField.setAccessible(true);
@@ -440,6 +471,7 @@ public class NotionExporterImplementation {
         }
 
         for(NotionPage page : pagesToExport) {
+            System.out.println(page); // TODO: Remove
             String pageId = cleanPageId(page.getPageId().toString());
 
             if(!hasMappingFor(mapping, pageId)) {

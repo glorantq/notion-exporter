@@ -4,9 +4,7 @@ import hu.glorantq.notion.api.model.NotionPage;
 import hu.glorantq.notion.api.model.NotionPaginatedResponse;
 import hu.glorantq.notion.api.model.blocks.NotionBlock;
 import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
+import retrofit2.http.*;
 
 /*
     https://developers.notion.com/reference/intro
@@ -28,4 +26,11 @@ public interface NotionAPI {
 
     @GET("blocks/{blockId}/children")
     Call<NotionPaginatedResponse<NotionBlock>> retrieveBlockChildren(@Path("blockId") String blockId);
+
+    // Databases
+    @GET("databases/{databaseId}")
+    Call<NotionPage> retrieveDatabase(@Path("databaseId") String databaseId);
+
+    @POST("databases/{databaseId}/query")
+    Call<NotionPaginatedResponse<NotionPage>> queryDatabase(@Path("databaseId") String databaseId, @Body QueryDatabaseBody queryBody);
 }

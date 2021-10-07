@@ -17,12 +17,16 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import javax.imageio.stream.FileImageInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -232,6 +236,31 @@ public class NotionExporter {
         } else if(!outputFolder.mkdirs()) {
             LOGGER.error("Failed to create output directory!");
             return;
+        }
+
+        File assetsDirectory = new File(outputFolder, "assets");
+        File userAssets = new File(assetsDirectory, "user");
+        if(!userAssets.exists()) {
+            userAssets.mkdirs();
+        }
+
+        File iconFile = new File(faviconPath);
+        if(!iconFile.exists()) {
+            LOGGER.warn("Missing or invalid icon path!");
+        } else {
+            File outIcon = new File(userAssets, "favicon.png");
+
+            try {
+                FileInputStream fileInputStream = new FileInputStream(iconFile);
+                FileOutputStream fileOutputStream = new FileOutputStream(outIcon);
+                IOUtils.copy(fileInputStream, fileOutputStream);
+                fileOutputStream.close();
+                fileInputStream.close();
+
+                LOGGER.info("Copied icon!");
+            } catch (Exception e) {
+                LOGGER.error("Failed to copy icon!", e);
+            }
         }
 
         NotionBlock.Type[] blockTypes = NotionBlock.Type.values();

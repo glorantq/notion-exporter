@@ -7,10 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /*
     https://developers.notion.com/reference/page
@@ -49,6 +46,9 @@ public class NotionPage {
     private Map<String, NotionPropertyValueObject> properties;
 
     @Expose
+    private List<NotionRichText> title;
+
+    @Expose
     private NotionParent parent;
 
     @Expose
@@ -68,6 +68,20 @@ public class NotionPage {
     }
 
     public String getTitle() {
-        return properties.get("title").getTitle().get(0).getPlainText();
+        if(objectType.equalsIgnoreCase("page")) {
+            if(parent.getParentType().equalsIgnoreCase("database_id")) {
+                for(Map.Entry<String, NotionPropertyValueObject> entry : properties.entrySet()) {
+                    if(entry.getValue().getType() == NotionPropertyValueObject.Type.TITLE) {
+                        return entry.getValue().getTitle().get(0).getPlainText();
+                    }
+                }
+
+                return "";
+            }
+
+            return properties.get("title").getTitle().get(0).getPlainText();
+        } else {
+            return title.get(0).getPlainText();
+        }
     }
 }

@@ -7,8 +7,19 @@
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="author" content="${pageAuthor}" />
 
+    <meta name="author" content="${pageAuthor}" />
+    <meta name="designer" content="Gerber Lóránt Viktor" />
+    <meta name="description" content="${pageName}" />
+
+    <meta property="og:title" content="<@common.getPageTitle page=page />" />
+    <meta property="og:site_name" content="${pageName}" />
+    <meta property="og:type" content="website" />
+    <#if page.cover??>
+        <meta property="og:image" content="<@common.getUrlFromFile file=page.cover page=page />" />
+    </#if>
+
+    <link rel="shortcut icon" type="image/png" href="${resolveAssetLink("bundled:///assets/user/favicon.png", page)}">
     <link rel="stylesheet" href="${resolveAssetLink("bundled:///assets/page.css", page)}">
     <link rel="stylesheet" href="${resolveAssetLink("bundled:///assets/lib/katex.min.css", page)}">
     <link rel="stylesheet" id="prism-stylesheet" href="">
