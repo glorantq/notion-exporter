@@ -76,7 +76,7 @@ public class NotionPropertyValueObject {
     }
 
     @Expose
-    private FormulaPropertyValue formula; // TODO: Unknown name, just a guess
+    private FormulaPropertyValue formula;
 
     @Getter
     @AllArgsConstructor

@@ -392,7 +392,24 @@ public class NotionExporterImplementation {
                     continue;
                 }
 
+                List<NotionPage> databaseRecords = new ArrayList<>();
+                String nextCursor = null;
+                do {
+                    NotionPaginatedResponse<NotionPage> response = notionAPI.queryDatabase(childDatabase.getPageId().toString(), new QueryDatabaseBody(nextCursor, 100, null, null)).execute().body();
+
+                    if(response != null) {
+                        databaseRecords.addAll(response.getResults());
+                        nextCursor = response.getNextCursor();
+                    } else {
+                        nextCursor = null;
+                    }
+                } while (nextCursor != null);
+
+                addAllUnique(linkedPages, databaseRecords);
+
                 exploredPages.add(cleanPageId(childDatabase.getPageId().toString()));
+                exploredPages.addAll(databaseRecords.stream().map(it -> cleanPageId(it.getPageId().toString())).collect(Collectors.toList()));
+
                 continue;
             }
 
@@ -463,6 +480,16 @@ public class NotionExporterImplementation {
         return mappedName;
     }
 
+    private String getParentId(NotionParent parent) {
+        if(parent.getParentType().equalsIgnoreCase("page_id")) {
+            return cleanPageId(parent.getPageId());
+        } else if(parent.getParentType().equalsIgnoreCase("database_id")) {
+            return cleanPageId(parent.getDatabaseId());
+        }
+
+        return null;
+    }
+
     private Map<String, String> getPagePathMapping() {
         Map<String, String> mapping = new HashMap<>();
 
@@ -481,22 +508,23 @@ public class NotionExporterImplementation {
                     continue;
                 }
 
-                if(parent.getPageId() != null) {
+                String parentId = getParentId(parent);
+                if(parentId != null) {
                     List<String> pathElements = new ArrayList<>();
                     pathElements.add("index.html");
                     pathElements.add(getPageName(pageId));
 
-                    String parentId = cleanPageId(parent.getPageId());
+                    String parentId0 = parentId;
                     do {
-                        pathElements.add(getPageName(parentId));
+                        pathElements.add(getPageName(parentId0));
 
-                        NotionPage parent0 = findPage(parentId);
+                        NotionPage parent0 = findPage(parentId0);
                         if(parent0 == null || parent0.getParent().isWorkspace()) {
-                            parentId = null;
+                            parentId0 = null;
                         } else {
-                            parentId = cleanPageId(parent0.getPageId().toString());
+                            parentId0 = getParentId(parent0.getParent());
                         }
-                    } while (parentId != null);
+                    } while (parentId0 != null);
 
                     Collections.reverse(pathElements);
                     mapping.put(pageId, "./" + String.join("/", pathElements));
