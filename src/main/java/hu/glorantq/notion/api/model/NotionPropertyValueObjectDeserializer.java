@@ -45,14 +45,26 @@ public class NotionPropertyValueObjectDeserializer implements JsonDeserializer<N
         }
 
         double number;
-        if(jsonObject.has("number")) {
+        if(jsonObject.has("number") && !jsonObject.get("number").isJsonObject()) {
             number = context.deserialize(jsonObject.get("number"), double.class);
         } else {
             number = 0d;
         }
 
         NotionPropertyValueObject.SelectPropertyValue selectPropertyValue = context.deserialize(jsonObject.get("select"), NotionPropertyValueObject.SelectPropertyValue.class);
-        List<NotionPropertyValueObject.SelectPropertyValue> multiSelect = context.deserialize(jsonObject.get("multi_select"), TypeToken.getParameterized(List.class, NotionPropertyValueObject.SelectPropertyValue.class).getType());
+
+        List<NotionPropertyValueObject.SelectPropertyValue> multiSelect;
+        JsonElement multiSelectElement = jsonObject.get("multi_select");
+        if(multiSelectElement != null) {
+            if(multiSelectElement.isJsonObject()) {
+                multiSelect = context.deserialize(multiSelectElement.getAsJsonObject().get("options"), TypeToken.getParameterized(List.class, NotionPropertyValueObject.SelectPropertyValue.class).getType());
+            } else {
+                multiSelect = context.deserialize(multiSelectElement, TypeToken.getParameterized(List.class, NotionPropertyValueObject.SelectPropertyValue.class).getType());
+            }
+        } else {
+            multiSelect = null;
+        }
+
         NotionPropertyValueObject.DatePropertyValue date = context.deserialize(jsonObject.get("date"), NotionPropertyValueObject.DatePropertyValue.class);
         NotionPropertyValueObject.FormulaPropertyValue formula = context.deserialize(jsonObject.get("formula"), NotionPropertyValueObject.FormulaPropertyValue.class);
         List<NotionPropertyValueObject.RelationPropertyValue> relation = context.deserialize(jsonObject.get("relation"), TypeToken.getParameterized(List.class, NotionPropertyValueObject.RelationPropertyValue.class).getType());

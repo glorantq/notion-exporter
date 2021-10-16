@@ -3,11 +3,13 @@
 <#macro getUrlFromFile file page><#if file.fileType.name() == "EXTERNAL">${resolveAssetLink(file.externalData.externalUrl, page)}<#else>${resolveAssetLink(file.hostedData.hostedUrl, page)}</#if></#macro>
 
 <#macro getIcon icon imgClass page>
-    <#if icon.type.name() == "EMOJI">
-        <span>${icon.emojiCharacter}</span>
-    <#else>
-        <#assign iconFile = icon.toFileObject()>
-        <img src="<@getUrlFromFile file=iconFile page=page />" alt="Icon" class="${imgClass}"/>
+    <#if icon??>
+        <#if icon.type.name() == "EMOJI">
+            <span>${icon.emojiCharacter}</span>
+        <#else>
+            <#assign iconFile = icon.toFileObject()>
+            <img src="<@getUrlFromFile file=iconFile page=page />" alt="Icon" class="${imgClass}"/>
+        </#if>
     </#if>
 </#macro>
 

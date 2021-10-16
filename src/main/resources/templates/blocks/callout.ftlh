@@ -1,8 +1,8 @@
 <#import "./richText.ftlh" as richText>
 <#import "../common.ftl" as common>
-<div class="callout-container rich-text-color-${block.blockColor?string?lower_case}">
+<div class="callout-container rich-text-color-gray_background">
     <span class="callout-icon">
-        ❓ <#-- TODO: Icons not found in API -->
+        <@common.getIcon icon=block.icon imgClass="" page=page/>
     </span>
     <div class="callout-content">
         <#list block.text as textObject>

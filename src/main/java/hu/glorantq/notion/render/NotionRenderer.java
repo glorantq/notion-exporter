@@ -62,6 +62,8 @@ public class NotionRenderer {
         addBlockRenderer(NotionFileBlock.class, new FreemarkerBlockRenderer<NotionFileBlock>("blocks/file.ftlh"));
         addBlockRenderer(NotionEquationBlock.class, new FreemarkerBlockRenderer<NotionEquationBlock>("blocks/equation.ftlh"));
 
+        addBlockRenderer(NotionUnsupportedBlock.class, (notionBlock, page) -> "");
+
         // TODO: Add blocks
     }
 
@@ -80,8 +82,15 @@ public class NotionRenderer {
             do {
                 pageHierarchy.add(page);
 
-                if(page.getParent().getPageId() != null) {
-                    page = notionAPI.retrievePage(page.getParent().getPageId()).execute().body();
+                if(page.getParent().getPageId() != null || page.getParent().getDatabaseId() != null) {
+                    String parentId;
+                    if(page.getParent().getPageId() != null) {
+                        parentId = page.getParent().getPageId();
+                        page = notionAPI.retrievePage(parentId).execute().body();
+                    } else {
+                        parentId = page.getParent().getDatabaseId();
+                        page = notionAPI.retrieveDatabase(parentId).execute().body();
+                    }
                 } else {
                     page = null;
                 }
@@ -97,7 +106,7 @@ public class NotionRenderer {
 
             return stringWriter.toString();
         } catch (Exception e) {
-            return renderException(e);
+            return renderException(e, null);
         }
     }
 
@@ -141,7 +150,7 @@ public class NotionRenderer {
 
                 return stringWriter.toString();
             } catch (Exception e) {
-                return renderException(e);
+                return renderException(e, notionBlock);
             }
         }
     }
@@ -155,7 +164,7 @@ public class NotionRenderer {
         stringBuilder.append("</pre>");
     }
 
-    private String renderException(Exception e) {
+    private String renderException(Exception e, NotionBlock block) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("<html>");
         stringBuilder.append("<head>");
@@ -175,7 +184,8 @@ public class NotionRenderer {
             cause = cause.getCause();
         }
 
-        stringBuilder.append("<body>");
+        stringBuilder.append("<h3>").append(String.valueOf(block)).append("</h3>");
+        stringBuilder.append("</body>");
         stringBuilder.append("</html>");
 
         return stringBuilder.toString();

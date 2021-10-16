@@ -276,7 +276,7 @@ public class NotionExporterImplementation {
             String pageId = cleanPageId(notionPage.getPageId().toString());
             String mappedName;
 
-            if(rewriteNames) {
+            if(rewriteNames && !notionPage.getParent().getParentType().equalsIgnoreCase("database_id")) {
                 String rawTitle = notionPage.getTitle();
 
                 mappedName = Normalizer.normalize(rawTitle, Normalizer.Form.NFD)
@@ -498,7 +498,6 @@ public class NotionExporterImplementation {
         }
 
         for(NotionPage page : pagesToExport) {
-            System.out.println(page); // TODO: Remove
             String pageId = cleanPageId(page.getPageId().toString());
 
             if(!hasMappingFor(mapping, pageId)) {

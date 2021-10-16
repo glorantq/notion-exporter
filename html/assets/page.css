@@ -120,6 +120,7 @@ body {
     width: calc(100% - 0.7rem * 2);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
+    z-index: 9;
 }
 
 .navbar-container.footer {
@@ -176,6 +177,13 @@ body {
 
 .navbar-content a:hover {
     background: var(--navbar-link-hover);
+}
+
+.navbar-content .emoji {
+   height: 1em;
+   width: 1em;
+   margin: 0 .05em 0 .1em;
+   vertical-align: -0.1em;
 }
 
 
@@ -270,6 +278,13 @@ h1 {
     margin-bottom: 0.25rem;
 }
 
+h1 img.emoji {
+   height: 1em;
+   width: 1em;
+   margin: 0 .05em 0 .1em;
+   vertical-align: -0.1em;
+}
+
 h2 {
     font-weight: 600;
     font-size: 1.5em;
@@ -345,7 +360,7 @@ p {
     margin: 0;
 }
 
-.block-link.external-link .feather {
+.block-link.external-link .feather.feather-external-link {
     width: 0.8rem;
     height: 0.8rem;
     position: relative;
@@ -355,12 +370,18 @@ p {
     margin: 0;
 }
 
-.block-link span {
+.block-link .content {
     border-bottom: solid 1px var(--notion-gray);
 }
 
 .block-link:hover {
     background-color: var(--navbar-link-hover);
+}
+
+.block-link .emoji {
+    width: 1.4rem !important;
+    height: 1.4rem !important;
+    margin-right: 0.2rem !important;
 }
 
 .image-block {
@@ -394,7 +415,7 @@ p {
     height: 100%;
     overflow-wrap: anywhere;
     word-break: break-word;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .callout-content > * {
@@ -553,6 +574,67 @@ blockquote.renderer-error img {
     width: 1em;
     margin: 0 .05em 0 .1em;
     vertical-align: -0.13em;
+}
+
+.database-property-values {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: flex-start;
+}
+
+.property-container {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	padding: 0.2rem;
+	margin: 0.1rem;
+	font-size: 0.95rem;
+}
+
+.property-container img.emoji {
+   height: 1em;
+   width: 1em;
+   margin: 0 .05em 0 .1em;
+   vertical-align: -0.1em;
+}
+
+.property-name {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	margin-right: 1.75rem;
+	color: var(--notion-gray);
+	width: 20%;
+}
+
+.property-name .feather {
+	margin-bottom: 0.15rem;
+	margin-right: 0.5rem;
+	stroke-width: 2px;
+	width: 1.3rem;
+	height: 1.3rem;
+}
+
+.property-value {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.select-property {
+	padding: 0.2rem;
+	border-style: none;
+	border-radius: 0.2rem;
+	font-size: 0.8rem;
+}
+
+hr {
+	width: 100%;
+	border: solid 1px var(--notion-gray_background);
 }
 
 

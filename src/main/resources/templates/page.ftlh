@@ -1,4 +1,5 @@
 <#import "./common.ftl" as common>
+<#import "./database/database.ftlh" as database>
 <!DOCTYPE html>
 <html lang="hu">
 
@@ -77,6 +78,9 @@
 </div>
 <div class="page-content">
     <h1 class="page-title"><@common.getPageTitle page=page /></h1>
+    <#if page.parent.parentType == "database_id">
+        <@database.renderDatabaseProperties page=page />
+    </#if>
     <#assign blockChildren = getBlockChildren(page)>
     <#list blockChildren as block>
 <@common.renderBlockEx block=block page=page />
