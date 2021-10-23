@@ -23,6 +23,9 @@ public class NotionCodeBlock extends NotionBlock {
     @Expose
     private String language;
 
+    @Expose
+    private List<NotionRichText> caption;
+
     public NotionCodeBlock(String object, UUID id, Type type, Date createdTime, Date lastEditedTime, boolean archived, boolean hasChildren) {
         super(object, id, type, createdTime, lastEditedTime, archived, hasChildren);
     }
@@ -31,6 +34,7 @@ public class NotionCodeBlock extends NotionBlock {
     public NotionBlock deserialize(JsonObject jsonObject, JsonDeserializationContext context) throws JsonParseException {
         text = context.deserialize(jsonObject.get("text"), TypeToken.getParameterized(List.class, NotionRichText.class).getType());
         language = context.deserialize(jsonObject.get("language"), String.class);
+        caption = context.deserialize(jsonObject.get("caption"), TypeToken.getParameterized(List.class, NotionRichText.class).getType());
 
         return this;
     }

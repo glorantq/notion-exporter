@@ -27,5 +27,28 @@ public class QueryDatabaseBody {
     private Map<String, Object> filter;
 
     @Expose
-    private List<Map<String, Object>> sorts;
+    private NotionSortObject[] sorts;
+
+    @ToString
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class NotionSortObject {
+        @Expose
+        private String property;
+
+        @Expose
+        private Timestamp timestamp;
+
+        @Expose
+        private Direction direction;
+
+        public enum Direction {
+            @SerializedName("ascending") ASCENDING, @SerializedName("descending") DESCENDING
+        }
+
+        public enum Timestamp {
+            @SerializedName("created_time") CREATED_TIME, @SerializedName("last_edited_time") LAST_EDITED_TIME
+        }
+    }
 }

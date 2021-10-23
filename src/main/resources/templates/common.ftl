@@ -14,7 +14,7 @@
 </#macro>
 
 <#macro getNavbarElement page currentPage>
-    <a href="${resolvePageLink(page.pageId!"error-404", currentPage)}">
+    <a href="${resolvePageLink(page.pageId!"error-404", currentPage)}" class="navbar-element-link">
         <#if page.icon??>
             <div class="navbar-icon">
                 <@getIcon icon=page.icon imgClass="" page=currentPage />

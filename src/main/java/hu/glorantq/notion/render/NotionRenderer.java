@@ -1,19 +1,22 @@
 package hu.glorantq.notion.render;
 
-import freemarker.core.Environment;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.ext.beans.BeansWrapperBuilder;
 import freemarker.template.*;
 import hu.glorantq.notion.api.NotionAPI;
-import hu.glorantq.notion.api.model.NotionFile;
+import hu.glorantq.notion.api.QueryDatabaseBody;
 import hu.glorantq.notion.api.model.NotionPage;
 import hu.glorantq.notion.api.model.NotionPaginatedResponse;
+import hu.glorantq.notion.api.model.NotionPropertyValueObject;
 import hu.glorantq.notion.api.model.blocks.NotionBlock;
 import hu.glorantq.notion.api.model.blocks.impl.*;
+import hu.glorantq.notion.export.DatabaseResolver;
 import hu.glorantq.notion.export.LinkResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import retrofit2.Response;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
 
@@ -21,6 +24,7 @@ public class NotionRenderer {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final NotionAPI notionAPI;
     private final LinkResolver linkResolver;
+    private final DatabaseResolver databaseResolver;
 
     private final String pageAuthor;
     private final String pageName;
@@ -29,9 +33,10 @@ public class NotionRenderer {
 
     private final Map<Class<? extends NotionBlock>, BlockRenderer> blockRendererMappings = new HashMap<>();
 
-    public NotionRenderer(NotionAPI notionAPI, LinkResolver linkResolver, String pageAuthor, String pageName) {
+    public NotionRenderer(NotionAPI notionAPI, LinkResolver linkResolver, DatabaseResolver databaseResolver, String pageAuthor, String pageName) {
         this.notionAPI = notionAPI;
         this.linkResolver = linkResolver;
+        this.databaseResolver = databaseResolver;
         this.pageAuthor = pageAuthor;
         this.pageName = pageName;
 
@@ -61,6 +66,11 @@ public class NotionRenderer {
         addBlockRenderer(NotionCalloutBlock.class, new FreemarkerBlockRenderer<NotionCalloutBlock>("blocks/callout.ftlh"));
         addBlockRenderer(NotionFileBlock.class, new FreemarkerBlockRenderer<NotionFileBlock>("blocks/file.ftlh"));
         addBlockRenderer(NotionEquationBlock.class, new FreemarkerBlockRenderer<NotionEquationBlock>("blocks/equation.ftlh"));
+        addBlockRenderer(NotionDividerBlock.class, new FreemarkerBlockRenderer<NotionDividerBlock>("blocks/divider.ftlh"));
+        addBlockRenderer(NotionBreadcrumbBlock.class, new FreemarkerBlockRenderer<NotionBreadcrumbBlock>("blocks/breadcrumb.ftlh"));
+        addBlockRenderer(NotionQuoteBlock.class, new FreemarkerBlockRenderer<NotionQuoteBlock>("blocks/quote.ftlh"));
+        addBlockRenderer(NotionChildDatabaseBlock.class, new FreemarkerBlockRenderer<NotionChildDatabaseBlock>("blocks/childDatabase.ftlh"));
+        addBlockRenderer(NotionToDoBlock.class, new FreemarkerBlockRenderer<NotionToDoBlock>("blocks/todo.ftlh"));
 
         addBlockRenderer(NotionUnsupportedBlock.class, (notionBlock, page) -> "");
 
@@ -75,30 +85,7 @@ public class NotionRenderer {
             dataModel.put("page", notionPage);
             dataModel.put("pageName", pageName);
             dataModel.put("pageAuthor", pageAuthor);
-
-            List<NotionPage> pageHierarchy = new ArrayList<>();
-            NotionPage page = notionPage;
-
-            do {
-                pageHierarchy.add(page);
-
-                if(page.getParent().getPageId() != null || page.getParent().getDatabaseId() != null) {
-                    String parentId;
-                    if(page.getParent().getPageId() != null) {
-                        parentId = page.getParent().getPageId();
-                        page = notionAPI.retrievePage(parentId).execute().body();
-                    } else {
-                        parentId = page.getParent().getDatabaseId();
-                        page = notionAPI.retrieveDatabase(parentId).execute().body();
-                    }
-                } else {
-                    page = null;
-                }
-            } while(page != null);
-
-            Collections.reverse(pageHierarchy);
-
-            dataModel.put("pageHierarchy", pageHierarchy);
+            dataModel.put("pageHierarchy", getPageHierarchy(notionPage));
             addTemplateMethods(dataModel);
 
             StringWriter stringWriter = new StringWriter();
@@ -108,6 +95,31 @@ public class NotionRenderer {
         } catch (Exception e) {
             return renderException(e, null);
         }
+    }
+
+    private List<NotionPage> getPageHierarchy(NotionPage page) throws IOException {
+        List<NotionPage> pageHierarchy = new ArrayList<>();
+
+        do {
+            pageHierarchy.add(page);
+
+            if(page.getParent().getPageId() != null || page.getParent().getDatabaseId() != null) {
+                String parentId;
+                if(page.getParent().getPageId() != null) {
+                    parentId = page.getParent().getPageId();
+                    page = notionAPI.retrievePage(parentId).execute().body();
+                } else {
+                    parentId = page.getParent().getDatabaseId();
+                    page = notionAPI.retrieveDatabase(parentId).execute().body();
+                }
+            } else {
+                page = null;
+            }
+        } while(page != null);
+
+        Collections.reverse(pageHierarchy);
+
+        return pageHierarchy;
     }
 
     public void addBlockRenderer(Class<? extends NotionBlock> blockType, BlockRenderer blockRenderer) {
@@ -126,6 +138,10 @@ public class NotionRenderer {
         dataModel.put("fetchPage", new FetchPageMethod());
         dataModel.put("resolveAssetLink", new ResolveAssetLinkMethod());
         dataModel.put("resolvePageLink", new ResolvePageLinkMethod());
+        dataModel.put("fetchDatabase", new FetchDatabaseMethod());
+        dataModel.put("queryDatabase", new QueryDatabaseMethod());
+        dataModel.put("getColumnsToRender", new GetColumnsToRenderMethod());
+        dataModel.put("getDatabaseDisplay", new GetDatabaseDisplayMethod());
     }
 
     private class FreemarkerBlockRenderer<T extends NotionBlock> implements BlockRenderer {
@@ -143,6 +159,7 @@ public class NotionRenderer {
                 Map<String, Object> dataModel = new HashMap<>();
                 dataModel.put("block", notionBlock);
                 dataModel.put("page", notionPage);
+                dataModel.put("pageHierarchy", getPageHierarchy(notionPage));
                 addTemplateMethods(dataModel);
 
                 StringWriter stringWriter = new StringWriter();
@@ -251,9 +268,126 @@ public class NotionRenderer {
             String pageId = scalarModel.getAsString();
 
             try {
-                return notionAPI.retrievePage(pageId).execute().body();
+                Response<NotionPage> page = notionAPI.retrievePage(pageId).execute();
+                if(page.isSuccessful()) {
+                    return page.body();
+                } else {
+                    throw new TemplateModelException(page.errorBody().string());
+                }
             } catch (Exception e) {
                 throw new TemplateModelException("Failed to fetch page!", e);
+            }
+        }
+    }
+
+    private class FetchDatabaseMethod implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel pageIdModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) pageIdModel;
+            String databaseId = scalarModel.getAsString();
+
+            try {
+                Response<NotionPage> page = notionAPI.retrieveDatabase(databaseId).execute();
+                if(page.isSuccessful()) {
+                    return page.body();
+                } else {
+                    throw new TemplateModelException(page.errorBody().string());
+                }
+            } catch (Exception e) {
+                throw new TemplateModelException("Failed to fetch database!", e);
+            }
+        }
+    }
+
+    private class GetDatabaseDisplayMethod implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel pageIdModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) pageIdModel;
+            String databaseId = scalarModel.getAsString();
+
+            return databaseResolver.getDisplay(databaseId).name();
+        }
+    }
+
+    private class GetColumnsToRenderMethod implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel pageIdModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) pageIdModel;
+            String databaseId = scalarModel.getAsString();
+
+            String[] columns = databaseResolver.getColumnsToRender(databaseId);
+            if(columns.length != 0) {
+                return columns;
+            }
+
+            try {
+                Response<NotionPage> page = notionAPI.retrieveDatabase(databaseId).execute();
+                if(page.isSuccessful()) {
+                    NotionPage database = page.body();
+
+                    List<String> columnsFetched = new ArrayList<>();
+                    for(Map.Entry<String, NotionPropertyValueObject> entry : database.getProperties().entrySet()) {
+                        columnsFetched.add(entry.getKey());
+                    }
+
+                    Collections.reverse(columnsFetched);
+
+                    return columnsFetched.toArray(new String[0]);
+                } else {
+                    throw new TemplateModelException(page.errorBody().string());
+                }
+            } catch (Exception e) {
+                throw new TemplateModelException("Failed to fetch database!", e);
+            }
+        }
+    }
+
+    private class QueryDatabaseMethod implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel pageIdModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) pageIdModel;
+            String databaseId = scalarModel.getAsString();
+
+            QueryDatabaseBody.NotionSortObject[] sorts = databaseResolver.getSorts(databaseId);
+            Map<String, Object> filter = databaseResolver.getFilter(databaseId);
+
+            try {
+                List<NotionPage> databaseRecords = new ArrayList<>();
+                String nextCursor = null;
+                do {
+                    NotionPaginatedResponse<NotionPage> response = notionAPI.queryDatabase(databaseId, new QueryDatabaseBody(nextCursor, 100, filter, sorts)).execute().body();
+
+                    if(response != null) {
+                        databaseRecords.addAll(response.getResults());
+                        nextCursor = response.getNextCursor();
+                    } else {
+                        nextCursor = null;
+                    }
+                } while (nextCursor != null);
+
+                return databaseRecords;
+            } catch (Exception e) {
+                throw new TemplateModelException("Failed to query database!", e);
             }
         }
     }

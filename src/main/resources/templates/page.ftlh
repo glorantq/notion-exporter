@@ -81,6 +81,9 @@
     <#if page.parent.parentType == "database_id">
         <@database.renderDatabaseProperties page=page />
     </#if>
+    <#if page.objectType == "database">
+        <@database.renderDatabase page=page containingPage=page/>
+    </#if>
     <#assign blockChildren = getBlockChildren(page)>
     <#list blockChildren as block>
 <@common.renderBlockEx block=block page=page />

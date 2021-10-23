@@ -4,7 +4,9 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.Expose;
+import com.google.gson.reflect.TypeToken;
 import hu.glorantq.notion.api.model.NotionFile;
+import hu.glorantq.notion.api.model.NotionRichText;
 import hu.glorantq.notion.api.model.blocks.NotionBlock;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,6 +14,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @ToString(callSuper = true)
@@ -19,6 +22,9 @@ import java.util.UUID;
 public class NotionFileBlock extends NotionBlock {
     @Expose
     private NotionFile fileObject;
+
+    @Expose
+    private List<NotionRichText> caption;
 
     public NotionFileBlock(String object, UUID id, Type type, Date createdTime, Date lastEditedTime, boolean archived, boolean hasChildren) {
         super(object, id, type, createdTime, lastEditedTime, archived, hasChildren);
@@ -44,6 +50,7 @@ public class NotionFileBlock extends NotionBlock {
     @Override
     public NotionBlock deserialize(JsonObject jsonObject, JsonDeserializationContext context) throws JsonParseException {
         fileObject = context.deserialize(jsonObject, NotionFile.class);
+        caption = context.deserialize(jsonObject.get("caption"), TypeToken.getParameterized(List.class, NotionRichText.class).getType());
 
         return this;
     }

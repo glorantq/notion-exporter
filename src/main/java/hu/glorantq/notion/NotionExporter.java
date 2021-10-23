@@ -1,6 +1,9 @@
 package hu.glorantq.notion;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import hu.glorantq.notion.api.NotionAPI;
+import hu.glorantq.notion.api.QueryDatabaseBody;
 import hu.glorantq.notion.api.StringConstants;
 import hu.glorantq.notion.api.model.NotionPage;
 import hu.glorantq.notion.api.model.NotionPaginatedResponse;
@@ -9,6 +12,7 @@ import hu.glorantq.notion.api.model.blocks.NotionNotImplementedBlock;
 import hu.glorantq.notion.export.LinkResolver;
 import hu.glorantq.notion.export.NotionExporterImplementation;
 import hu.glorantq.notion.render.NotionRenderer;
+import me.grison.jtoml.impl.SimpleTomlParser;
 import me.grison.jtoml.impl.Toml;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -31,6 +35,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
 import java.util.Map;
 
 public class NotionExporter {
@@ -117,16 +122,6 @@ public class NotionExporter {
         }
     }
 
-    /*
-        pageName: String
-        pageAuthor: String
-        faviconPath: String
-        -------------------
-        rootNotionPageId: String
-        notionIntegrationKey: String
-        followLinkedPages: Bool
-     */
-
     private static void handleStartupFile(String filePath) {
         File configFile = new File(filePath);
 
@@ -142,6 +137,74 @@ public class NotionExporter {
         } catch (Exception e) {
             LOGGER.error("Failed to parse configuration file!", e);
             return;
+        }
+
+        Map<String, DatabaseConfiguration> databaseConfigurationMap =  new HashMap<>();
+        File databaseConfigFile = configFile.toPath().resolveSibling("database.toml").toFile();
+        if(databaseConfigFile.exists()) {
+            Map<String, Object> databaseConfig;
+
+            try {
+                databaseConfig = new SimpleTomlParser().parse(Files.readString(databaseConfigFile.toPath()));
+            } catch (Exception e) {
+                LOGGER.error("Failed to parse database configuration!");
+                return;
+            }
+
+            for(Map.Entry<String, Object> rootEntry : databaseConfig.entrySet()) {
+                Gson gson = new GsonBuilder().create();
+
+                String databaseKey = rootEntry.getKey();
+
+                Map<String, Object> values = (Map<String, Object>) rootEntry.getValue();
+                Object filterJson0 = values.get("filter");
+                Object sortsJson0 = values.get("sorts");
+                Object columnsJson0 = values.get("columns");
+                Object display0 = values.get("display");
+                Object groupBy0 = values.get("groupBy");
+
+                String filterJson;
+                if(filterJson0 == null) {
+                    filterJson = null;
+                } else {
+                    filterJson = String.valueOf(filterJson0);
+                }
+
+                QueryDatabaseBody.NotionSortObject[] sorts;
+                if(sortsJson0 == null) {
+                    sorts = new QueryDatabaseBody.NotionSortObject[0];
+                    LOGGER.warn("Invalid columns declaration for {}, everything will be rendered!", databaseKey);
+                } else {
+                    sorts = gson.fromJson(String.valueOf(sortsJson0), QueryDatabaseBody.NotionSortObject[].class);
+                }
+
+                String[] columns;
+                if(columnsJson0 == null) {
+                    columns = new String[0];
+                } else {
+                    columns = gson.fromJson(String.valueOf(columnsJson0), String[].class);
+                }
+
+                DatabaseConfiguration.Display display;
+                if(display0 != null) {
+                    display = DatabaseConfiguration.Display.valueOf(String.valueOf(display0).toUpperCase());
+                } else {
+                    display = DatabaseConfiguration.Display.TABLE;
+                    LOGGER.warn("No display specified for {}, using table!", databaseKey);
+                }
+
+                String groupBy;
+                if(groupBy0 == null) {
+                    groupBy = null;
+                } else {
+                    groupBy = String.valueOf(groupBy0);
+                }
+
+                DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(sorts, filterJson, columns, display, groupBy);
+                databaseConfigurationMap.put(databaseKey, databaseConfiguration);
+            }
+        } else {
+            LOGGER.warn("No database.toml found!");
         }
 
         LOGGER.info("Using configuration file: {}", configFile.getAbsolutePath());
@@ -164,7 +227,7 @@ public class NotionExporter {
             boolean rewriteIndex = Boolean.parseBoolean(getValueFromMap(exportProperties, "rewriteIndex"));
             boolean rewriteNames = Boolean.parseBoolean(getValueFromMap(exportProperties, "fancyNames"));
 
-            handleStartup(pageName, pageAuthor, faviconPath, rootNotionPageId, notionIntegrationKey, followLinkedPages, outFolder, rewriteIndex, rewriteNames);
+            handleStartup(pageName, pageAuthor, faviconPath, rootNotionPageId, notionIntegrationKey, followLinkedPages, outFolder, rewriteIndex, rewriteNames, databaseConfigurationMap);
         } catch (Exception e) {
             LOGGER.error("Failed to process configuration!", e);
         }
@@ -200,7 +263,8 @@ public class NotionExporter {
             boolean rewriteIndex = getValueFromNamespace(namespace, "rewriteIndex");
             boolean rewriteNames = getValueFromNamespace(namespace, "fancyNames");
 
-            handleStartup(pageName, pageAuthor, favicon, rootPageId, notionKey, followLinks, outFolder, rewriteIndex, rewriteNames);
+            LOGGER.warn("Can't handle advanced configuration for databases in CLI mode! Consider using a configuration file instead.");
+            handleStartup(pageName, pageAuthor, favicon, rootPageId, notionKey, followLinks, outFolder, rewriteIndex, rewriteNames, new HashMap<>());
         } catch (Exception e) {
             LOGGER.error("Failed to process arguments!", e);
         }
@@ -218,9 +282,7 @@ public class NotionExporter {
     }
 
     private static void handleStartup(String pageName, String pageAuthor, String faviconPath, String rootNotionPageId, String notionIntegrationKey, boolean followLinkedPages,
-                                      String outFolder, boolean rewriteIndex, boolean rewriteNames) {
-        LOGGER.info("{} {} {} {} {} {} {} {}", pageName, pageAuthor, faviconPath, rootNotionPageId, notionIntegrationKey, followLinkedPages, outFolder, rewriteIndex);
-
+                                      String outFolder, boolean rewriteIndex, boolean rewriteNames, Map<String, DatabaseConfiguration> databaseConfigurationMap) {
         File outputFolder = new File(outFolder);
         if(outputFolder.exists()) {
             if(!outputFolder.isDirectory()) {
@@ -272,7 +334,7 @@ public class NotionExporter {
 
         try {
             NotionExporterImplementation exporterImplementation = new NotionExporterImplementation(notionIntegrationKey, rootNotionPageId, rewriteIndex, rewriteNames, followLinkedPages,
-                    true, pageName, pageAuthor, outputFolder);
+                    true, pageName, pageAuthor, outputFolder, databaseConfigurationMap);
             exporterImplementation.beginRendering();
         } catch (Exception e) {
             LOGGER.error("Failed to fetch page!", e);

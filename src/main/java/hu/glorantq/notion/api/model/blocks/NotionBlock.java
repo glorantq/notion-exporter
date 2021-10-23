@@ -43,7 +43,9 @@ public abstract class NotionBlock {
         @SerializedName("video") VIDEO(NotionVideoBlock.class), @SerializedName("file") FILE(NotionFileBlock.class),
         @SerializedName("pdf") PDF(NotionPDFBlock.class), @SerializedName("bookmark") BOOKMARK(NotionBookmarkBlock.class),
         @SerializedName("code") CODE(NotionCodeBlock.class), @SerializedName("callout") CALLOUT(NotionCalloutBlock.class),
-        @SerializedName("equation") EQUATION(NotionEquationBlock.class), @SerializedName("quote") QUOTE(NotionNotImplementedBlock.class),
+        @SerializedName("equation") EQUATION(NotionEquationBlock.class), @SerializedName("quote") QUOTE(NotionQuoteBlock.class),
+        @SerializedName("divider") DIVIDER(NotionDividerBlock.class), @SerializedName("table_of_contents") TABLE_OF_CONTENTS(NotionNotImplementedBlock.class),
+        @SerializedName("breadcrumb") BREADCRUMB(NotionBreadcrumbBlock.class),
         @SerializedName("unsupported") UNSUPPORTED(NotionUnsupportedBlock.class);
 
         private final Class<? extends NotionBlock> typeClass;

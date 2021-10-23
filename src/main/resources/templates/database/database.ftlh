@@ -1,4 +1,7 @@
 <#import "../blocks/richText.ftlh" as richText>
+
+<#import "./table.ftlh" as tableRenderer>
+
 <#macro renderDatabaseProperties page>
     <div class="database-property-values">
         <#list page.properties.entrySet() as entry>
@@ -23,7 +26,24 @@
     </div>
 </#macro>
 
-<#macro getPropertyIcon type><#switch type><#case "RICH_TEXT">align-left<#break><#case "NUMBER">hash<#break><#case "SELECT"><#case "MULTI_SELECT">tag<#break><#default>help-circle</#switch></#macro>
+<#macro renderDatabase page containingPage>
+    <#assign databaseRecords = queryDatabase(page.pageId)>
+
+    <div class="database-container">
+        <#assign display = getDatabaseDisplay(page.pageId)>
+        <#switch display>
+            <#case "TABLE">
+                <@tableRenderer.render page=page containingPage=containingPage databaseRecords=databaseRecords />
+                <#break>
+
+            <#-- TODO: Board renderer -->
+            <#default>
+                <blockquote class="renderer-error">No database renderer for ${display}!</blockquote>
+        </#switch>
+    </div>
+</#macro>
+
+<#macro getPropertyIcon type><#switch type><#case "RICH_TEXT">align-left<#break><#case "NUMBER">hash<#break><#case "SELECT"><#case "MULTI_SELECT">tag<#break><#case "TITLE">type<#break><#default>help-circle</#switch></#macro>
 
 <#macro getPropertyContent value page>
     <#assign type = value.type.name()>
@@ -45,6 +65,12 @@
         <#case "MULTI_SELECT">
             <#list value.multiSelect as select>
                 <@renderSelectValue select.name select.color />
+            </#list>
+            <#break>
+
+        <#case "TITLE">
+            <#list value.title as text>
+               <@richText.renderRichText richText=text page=page />
             </#list>
             <#break>
 

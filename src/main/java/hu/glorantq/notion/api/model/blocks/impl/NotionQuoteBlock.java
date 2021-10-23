@@ -16,21 +16,17 @@ import java.util.UUID;
 
 @ToString(callSuper = true)
 @Getter
-public class NotionEmbedBlock extends NotionBlock {
+public class NotionQuoteBlock extends NotionBlock {
     @Expose
-    private String url;
+    private List<NotionRichText> text;
 
-    @Expose
-    private List<NotionRichText> caption;
-
-    public NotionEmbedBlock(String object, UUID id, Type type, Date createdTime, Date lastEditedTime, boolean archived, boolean hasChildren) {
+    public NotionQuoteBlock(String object, UUID id, Type type, Date createdTime, Date lastEditedTime, boolean archived, boolean hasChildren) {
         super(object, id, type, createdTime, lastEditedTime, archived, hasChildren);
     }
 
     @Override
     public NotionBlock deserialize(JsonObject jsonObject, JsonDeserializationContext context) throws JsonParseException {
-        url = context.deserialize(jsonObject.get("url"), String.class);
-        caption = context.deserialize(jsonObject.get("caption"), TypeToken.getParameterized(List.class, NotionRichText.class).getType());
+        text = context.deserialize(jsonObject.get("text"), TypeToken.getParameterized(List.class, NotionRichText.class).getType());
 
         return this;
     }

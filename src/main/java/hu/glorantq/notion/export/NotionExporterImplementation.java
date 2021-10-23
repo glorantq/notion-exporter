@@ -1,9 +1,13 @@
 package hu.glorantq.notion.export;
 
 import com.fewlaps.slimjpg.SlimJpg;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.googlecode.pngtastic.PngtasticOptimizer;
 import com.googlecode.pngtastic.core.PngImage;
 import com.googlecode.pngtastic.core.PngOptimizer;
+import hu.glorantq.notion.DatabaseConfiguration;
 import hu.glorantq.notion.api.NotionAPI;
 import hu.glorantq.notion.api.QueryDatabaseBody;
 import hu.glorantq.notion.api.StringConstants;
@@ -58,12 +62,16 @@ public class NotionExporterImplementation {
     private final Map<String, String> mirroredFiles = new HashMap<>();
     private final PngOptimizer pngOptimizer = new PngOptimizer();
 
-    public NotionExporterImplementation(String integrationKey, String rootPageId, boolean rewriteIndex, boolean rewriteNames, boolean followLinks, boolean mirrorAssets, String pageName, String pageAuthor, File outputFolder) {
+    private Map<String, DatabaseConfiguration> databaseConfigurationMap;
+
+    public NotionExporterImplementation(String integrationKey, String rootPageId, boolean rewriteIndex, boolean rewriteNames, boolean followLinks, boolean mirrorAssets, String pageName, String pageAuthor, File outputFolder,
+                                        Map<String, DatabaseConfiguration> databaseConfigurationMap) {
         this.rootPageId = rootPageId;
         this.followLinks = followLinks;
         this.outputFolder = outputFolder;
         this.rewriteIndex = rewriteIndex;
         this.rewriteNames = rewriteNames;
+        this.databaseConfigurationMap = databaseConfigurationMap;
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(chain -> {
@@ -89,16 +97,6 @@ public class NotionExporterImplementation {
                 .build();
 
         this.notionAPI = retrofit.create(NotionAPI.class);
-
-        try {
-            NotionPage testDatabase = notionAPI.retrieveDatabase("d7a88c70129d475dbff6a1ef5ee4334d").execute().body();
-            System.out.println(testDatabase);
-
-            NotionPaginatedResponse<NotionPage> paginatedResponse = notionAPI.queryDatabase("d7a88c70129d475dbff6a1ef5ee4334d", new QueryDatabaseBody()).execute().body();
-            System.out.println(paginatedResponse);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         logger.info("Loading pages...");
         this.pagesToExport = listPagesToExport();
@@ -233,7 +231,67 @@ public class NotionExporterImplementation {
             }
         };
 
-        this.notionRenderer = new NotionRenderer(notionAPI, linkResolver, pageAuthor, pageName);
+        DatabaseResolver databaseResolver = new DatabaseResolver() {
+            private final Gson gson = new GsonBuilder().create();
+
+            @Override
+            public String[] getColumnsToRender(String databaseId) {
+                DatabaseConfiguration configuration = databaseConfigurationMap.get(cleanPageId(databaseId));
+                if(configuration != null) {
+                    return configuration.getColumnsToRender();
+                } else {
+                    logger.warn("No configuration for {}!", databaseId);
+                    return new String[0];
+                }
+            }
+
+            @Override
+            public QueryDatabaseBody.NotionSortObject[] getSorts(String databaseId) {
+                DatabaseConfiguration configuration = databaseConfigurationMap.get(cleanPageId(databaseId));
+                if(configuration != null) {
+                    return configuration.getSorts();
+                } else {
+                    logger.warn("No configuration for {}!", databaseId);
+                    return new QueryDatabaseBody.NotionSortObject[0];
+                }
+            }
+
+            @Override
+            public Map<String, Object> getFilter(String databaseId) {
+                DatabaseConfiguration configuration = databaseConfigurationMap.get(cleanPageId(databaseId));
+                if(configuration != null) {
+                    String filterJson = configuration.getFilterJson();
+                    return gson.fromJson(filterJson, TypeToken.getParameterized(Map.class, String.class, Object.class).getType());
+                } else {
+                    logger.warn("No configuration for {}!", databaseId);
+                    return null;
+                }
+            }
+
+            @Override
+            public DatabaseConfiguration.Display getDisplay(String databaseId) {
+                DatabaseConfiguration configuration = databaseConfigurationMap.get(cleanPageId(databaseId));
+                if(configuration != null) {
+                    return configuration.getDisplay();
+                } else {
+                    logger.warn("No configuration for {}!", databaseId);
+                    return DatabaseConfiguration.Display.TABLE;
+                }
+            }
+
+            @Override
+            public String getGroupBy(String databaseId) {
+                DatabaseConfiguration configuration = databaseConfigurationMap.get(cleanPageId(databaseId));
+                if(configuration != null) {
+                    return configuration.getGroupBy();
+                } else {
+                    logger.warn("No configuration for {}!", databaseId);
+                    return null;
+                }
+            }
+        };
+
+        this.notionRenderer = new NotionRenderer(notionAPI, linkResolver, databaseResolver, pageAuthor, pageName);
         notionRenderer.registerDefaultRenderers();
 
         logger.info("Ready to export!");
