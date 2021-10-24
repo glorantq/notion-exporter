@@ -294,6 +294,12 @@ public class NotionExporterImplementation {
         this.notionRenderer = new NotionRenderer(notionAPI, linkResolver, databaseResolver, pageAuthor, pageName);
         notionRenderer.registerDefaultRenderers();
 
+        for(NotionBlock.Type blockType : NotionBlock.Type.values()) {
+            if(!notionRenderer.hasRenderer(blockType.getTypeClass())) {
+                logger.warn("No renderer registered for: {}!", blockType.name());
+            }
+        }
+
         logger.info("Ready to export!");
 
         StringBuilder pagesDataBuilder = new StringBuilder();

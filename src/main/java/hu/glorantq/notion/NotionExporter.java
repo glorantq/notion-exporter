@@ -2,39 +2,25 @@ package hu.glorantq.notion;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import hu.glorantq.notion.api.NotionAPI;
+import com.moandjiezana.toml.Toml;
 import hu.glorantq.notion.api.QueryDatabaseBody;
-import hu.glorantq.notion.api.StringConstants;
-import hu.glorantq.notion.api.model.NotionPage;
-import hu.glorantq.notion.api.model.NotionPaginatedResponse;
 import hu.glorantq.notion.api.model.blocks.NotionBlock;
 import hu.glorantq.notion.api.model.blocks.NotionNotImplementedBlock;
-import hu.glorantq.notion.export.LinkResolver;
 import hu.glorantq.notion.export.NotionExporterImplementation;
-import hu.glorantq.notion.render.NotionRenderer;
-import me.grison.jtoml.impl.SimpleTomlParser;
-import me.grison.jtoml.impl.Toml;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
-import javax.imageio.stream.FileImageInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -133,7 +119,7 @@ public class NotionExporter {
         Toml parsedConfig;
 
         try {
-            parsedConfig = Toml.parse(configFile);
+            parsedConfig = new Toml().read(configFile);
         } catch (Exception e) {
             LOGGER.error("Failed to parse configuration file!", e);
             return;
@@ -145,9 +131,9 @@ public class NotionExporter {
             Map<String, Object> databaseConfig;
 
             try {
-                databaseConfig = new SimpleTomlParser().parse(Files.readString(databaseConfigFile.toPath()));
+                databaseConfig = new Toml().read(databaseConfigFile).toMap();
             } catch (Exception e) {
-                LOGGER.error("Failed to parse database configuration!");
+                LOGGER.error("Failed to parse database configuration!", e);
                 return;
             }
 
@@ -173,16 +159,20 @@ public class NotionExporter {
                 QueryDatabaseBody.NotionSortObject[] sorts;
                 if(sortsJson0 == null) {
                     sorts = new QueryDatabaseBody.NotionSortObject[0];
-                    LOGGER.warn("Invalid columns declaration for {}, everything will be rendered!", databaseKey);
                 } else {
-                    sorts = gson.fromJson(String.valueOf(sortsJson0), QueryDatabaseBody.NotionSortObject[].class);
+                    sorts = Arrays.stream(((ArrayList) sortsJson0).toArray(new Object[0]))
+                            .map(it -> gson.fromJson(String.valueOf(it), QueryDatabaseBody.NotionSortObject.class))
+                            .toArray(QueryDatabaseBody.NotionSortObject[]::new);
                 }
 
                 String[] columns;
                 if(columnsJson0 == null) {
                     columns = new String[0];
+                    LOGGER.warn("Invalid columns declaration for {}, everything will be rendered!", databaseKey);
                 } else {
-                    columns = gson.fromJson(String.valueOf(columnsJson0), String[].class);
+                    columns = Arrays.stream(((ArrayList) columnsJson0).toArray(new Object[0]))
+                            .map(String::valueOf)
+                            .toArray(String[]::new);
                 }
 
                 DatabaseConfiguration.Display display;
@@ -210,19 +200,19 @@ public class NotionExporter {
         LOGGER.info("Using configuration file: {}", configFile.getAbsolutePath());
 
         try {
-            Map<String, Object> siteProperties = parsedConfig.getMap("site");
+            Map<String, Object> siteProperties = parsedConfig.getTable("site").toMap();
 
             String pageName = getValueFromMap(siteProperties, "name");
             String pageAuthor = getValueFromMap(siteProperties, "author");
             String faviconPath = getValueFromMap(siteProperties, "favicon");
 
-            Map<String, Object> notionProperties = parsedConfig.getMap("notion");
+            Map<String, Object> notionProperties = parsedConfig.getTable("notion").toMap();
 
             String rootNotionPageId = getValueFromMap(notionProperties, "rootPageId");
             boolean followLinkedPages = Boolean.parseBoolean(getValueFromMap(notionProperties, "followLinks"));
             String notionIntegrationKey = getValueFromMap(notionProperties, "integrationKey");
 
-            Map<String, Object> exportProperties = parsedConfig.getMap("export");
+            Map<String, Object> exportProperties = parsedConfig.getTable("export").toMap();
             String outFolder = getValueFromMap(exportProperties, "folder");
             boolean rewriteIndex = Boolean.parseBoolean(getValueFromMap(exportProperties, "rewriteIndex"));
             boolean rewriteNames = Boolean.parseBoolean(getValueFromMap(exportProperties, "fancyNames"));

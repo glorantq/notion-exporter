@@ -1,6 +1,7 @@
 <#import "../blocks/richText.ftlh" as richText>
 
 <#import "./table.ftlh" as tableRenderer>
+<#import "./board.ftlh" as boardRenderer>
 
 <#macro renderDatabaseProperties page>
     <div class="database-property-values">
@@ -36,7 +37,11 @@
                 <@tableRenderer.render page=page containingPage=containingPage databaseRecords=databaseRecords />
                 <#break>
 
-            <#-- TODO: Board renderer -->
+            <#case "BOARD">
+                <@boardRenderer.render page=page containingPage=containingPage databaseRecords=databaseRecords />
+                <#break>
+
+            <#-- TODO: Calendar renderer -->
             <#default>
                 <blockquote class="renderer-error">No database renderer for ${display}!</blockquote>
         </#switch>

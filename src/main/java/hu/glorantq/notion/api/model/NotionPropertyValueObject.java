@@ -3,13 +3,11 @@ package hu.glorantq.notion.api.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /*
@@ -19,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode
 @JsonAdapter(NotionPropertyValueObjectDeserializer.class)
 public class NotionPropertyValueObject {
     @Expose
@@ -48,6 +47,7 @@ public class NotionPropertyValueObject {
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
+    @EqualsAndHashCode
     public static class SelectPropertyValue {
         @Expose
         private UUID id;
@@ -66,6 +66,7 @@ public class NotionPropertyValueObject {
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
+    @EqualsAndHashCode
     public static class DatePropertyValue {
         @Expose
         private Date start;
@@ -81,6 +82,7 @@ public class NotionPropertyValueObject {
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
+    @EqualsAndHashCode
     public static class FormulaPropertyValue {
         @Expose
         private Type type;
@@ -108,6 +110,7 @@ public class NotionPropertyValueObject {
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
+    @EqualsAndHashCode
     public static class RelationPropertyValue {
         @Expose
         private UUID id;

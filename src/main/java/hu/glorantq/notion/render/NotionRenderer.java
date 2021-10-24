@@ -71,10 +71,17 @@ public class NotionRenderer {
         addBlockRenderer(NotionQuoteBlock.class, new FreemarkerBlockRenderer<NotionQuoteBlock>("blocks/quote.ftlh"));
         addBlockRenderer(NotionChildDatabaseBlock.class, new FreemarkerBlockRenderer<NotionChildDatabaseBlock>("blocks/childDatabase.ftlh"));
         addBlockRenderer(NotionToDoBlock.class, new FreemarkerBlockRenderer<NotionToDoBlock>("blocks/todo.ftlh"));
+        addBlockRenderer(NotionToggleBlock.class, new FreemarkerBlockRenderer<NotionToggleBlock>("blocks/toggle.ftlh"));
+        addBlockRenderer(NotionEmbedBlock.class, new FreemarkerBlockRenderer<NotionEmbedBlock>("blocks/embed.ftlh"));
+        addBlockRenderer(NotionPDFBlock.class, new FreemarkerBlockRenderer<NotionPDFBlock>("blocks/pdf.ftlh"));
 
         addBlockRenderer(NotionUnsupportedBlock.class, (notionBlock, page) -> "");
 
         // TODO: Add blocks
+    }
+
+    public boolean hasRenderer(Class<? extends NotionBlock> block) {
+        return blockRendererMappings.get(block) != null;
     }
 
     public String renderPage(NotionPage notionPage) {
@@ -129,7 +136,7 @@ public class NotionRenderer {
         }
 
         blockRendererMappings.put(blockType, blockRenderer);
-        logger.error("Registered renderer for {}!", blockType.getName());
+        logger.info("Registered renderer for {}!", blockType.getName());
     }
 
     private void addTemplateMethods(Map<String, Object> dataModel) {
@@ -142,6 +149,8 @@ public class NotionRenderer {
         dataModel.put("queryDatabase", new QueryDatabaseMethod());
         dataModel.put("getColumnsToRender", new GetColumnsToRenderMethod());
         dataModel.put("getDatabaseDisplay", new GetDatabaseDisplayMethod());
+        dataModel.put("getGroupBy", new GetGroupByMethod());
+        dataModel.put("performKanbanGrouping", new PerformKanbanGroupingMethod());
     }
 
     private class FreemarkerBlockRenderer<T extends NotionBlock> implements BlockRenderer {
@@ -319,6 +328,21 @@ public class NotionRenderer {
         }
     }
 
+    private class GetGroupByMethod implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel pageIdModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) pageIdModel;
+            String databaseId = scalarModel.getAsString();
+
+            return databaseResolver.getGroupBy(databaseId);
+        }
+    }
+
     private class GetColumnsToRenderMethod implements TemplateMethodModelEx {
         @Override
         public Object exec(List arguments) throws TemplateModelException {
@@ -389,6 +413,40 @@ public class NotionRenderer {
             } catch (Exception e) {
                 throw new TemplateModelException("Failed to query database!", e);
             }
+        }
+    }
+
+    private class PerformKanbanGroupingMethod implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 2) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel recordsTemplateModel = (TemplateModel) arguments.get(0);
+            Object unwrapped = ((BeansWrapper) freemarkerConfiguration.getObjectWrapper()).unwrap(recordsTemplateModel);
+
+            TemplateScalarModel scalarModel = (TemplateScalarModel) arguments.get(1);
+            String groupBy = scalarModel.getAsString();
+
+            if(!(unwrapped instanceof List)) {
+                throw new TemplateModelException("Invalid type " + unwrapped.getClass().getCanonicalName() + "!");
+            }
+
+            List<NotionPage> databaseRecords = (List<NotionPage>) unwrapped;
+
+            LinkedHashMap<NotionPropertyValueObject, List<NotionPage>> grouped = new LinkedHashMap<>();
+            for(NotionPage record : databaseRecords) {
+                NotionPropertyValueObject groupByProperty = record.getProperties().get(groupBy);
+
+                if(!grouped.containsKey(groupByProperty)) {
+                    grouped.put(groupByProperty, new ArrayList<>());
+                }
+
+                grouped.get(groupByProperty).add(record);
+            }
+
+            return grouped;
         }
     }
 
