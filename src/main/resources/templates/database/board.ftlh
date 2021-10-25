@@ -13,7 +13,7 @@
             <div class="kanban-column">
                 <span class="kanban-header"><@database.getPropertyContent value=key page=page /> <span class="kanban-card-count">${values?size}</span></span>
                 <#list values as value>
-                    <div class="kanban-card" onclick="location.href='${resolvePageLink(value.pageId, containingPage)}';">
+                    <div class="kanban-card" onclick="window.location.href='${resolvePageLink(value.pageId, containingPage)}';">
                         <span class="kanban-card-title"><@_getTitle value.properties /></span>
                         <#list columns as column>
                             <#assign recordValue = value.properties[column]>

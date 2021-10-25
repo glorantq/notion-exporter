@@ -153,6 +153,7 @@ body {
 
 .navbar-left {
     justify-content: left;
+    max-width: calc(100% - 2rem);
 }
 
 .navbar-right {
@@ -180,6 +181,9 @@ body {
     border-radius: 0.3rem;
     padding: 0.2rem;
     transition: all 0.1s linear;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .navbar-content a:hover, .breadcrumb-container a:hover {
@@ -191,6 +195,11 @@ body {
    width: 1em;
    margin: 0 .05em 0 .1em;
    vertical-align: -0.1em;
+}
+
+.navbar-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 
@@ -746,7 +755,6 @@ blockquote.renderer-error img {
 	justify-content: flex-start;
 	margin-right: 1.75rem;
 	color: var(--notion-gray);
-	width: 20%;
 }
 
 .property-name .feather {
@@ -760,6 +768,7 @@ blockquote.renderer-error img {
 .property-value {
     overflow-wrap: anywhere;
     word-break: break-word;
+    margin-left: auto;
 }
 
 .select-property {
@@ -787,24 +796,40 @@ hr {
     color: var(--notion-gray);
 }
 
+.block[data-type="NotionChildDatabaseBlock"] h3 {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-end;
+}
+
 .block[data-type="NotionChildDatabaseBlock"] h3 a {
     font-weight: 600;
     font-size: 1.25rem;
     line-height: 1.3;
     margin-top: 1.3rem;
-    margin-bottom: 0.1rem;
     color: var(--text-color);
     border: none;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-decoration-color: var(--notion-gray);
 }
 
 .block[data-type="NotionChildDatabaseBlock"] h3 .feather {
-    width: 0.8rem;
-    height: 0.8rem;
-    margin-left: 0.3rem;
+    width: 1rem;
+    height: 1rem;
     vertical-align: middle;
+}
+
+.block[data-type="NotionChildDatabaseBlock"] h3 .maximize-button {
+    margin-left: auto;
+    padding: 0.2rem;
+    border-radius: 0.2rem;
+    background-color: transparent;
+    transition: background-color 0.2s linear;
+    cursor: pointer;
+}
+
+.block[data-type="NotionChildDatabaseBlock"] h3 .maximize-button:hover {
+    background-color: var(--navbar-link-hover);
 }
 
 /* Databases */

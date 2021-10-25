@@ -88,6 +88,31 @@ document.body.addEventListener("click", () => {
 
 shareButton.addEventListener("click", (event) => {
     event.stopPropagation();
+
+    if(navigator.share && navigator.canShare) {
+        let shareData = {
+            url: window.location.href,
+            title: window.document.title
+        };
+
+        if(navigator.canShare(shareData)) {
+            let shareResult = navigator.share(shareData);
+            shareResult.catch((error) => {
+                if(!(error instanceof AbortError)) {
+                    handleShareModal();
+                } else {
+                    console.log(error);
+                }
+            });
+        }
+
+        return;
+    }
+
+    handleShareModal();
+}, false);
+
+function handleShareModal() {
     let isOpened = shareModal.className === "share-modal-visible";
 
     if (isOpened) {
@@ -101,13 +126,18 @@ shareButton.addEventListener("click", (event) => {
 
         shareModal.className = "share-modal-visible";
     }
-}, false);
+}
 
 let shareCopyButton = document.getElementById("share-modal-copy");
 shareCopyButton.addEventListener("click", () => {
     shareUrl.select();
     shareUrl.setSelectionRange(0, 99999999);
-    navigator.clipboard.writeText(shareUrl.value);
+
+    if(navigator.clipboard) {
+        navigator.clipboard.writeText(shareUrl.value);
+    } else {
+        document.execCommand("copy");
+    }
 }, false);
 
 let loaderElements = document.body.getElementsByClassName("loader-container");
