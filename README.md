@@ -86,7 +86,9 @@ columns=["Paradigma", "Jellemzők"]
 ```
 
 Each database has a section in this file, starting with `[database-id]`. You can get this ID from the Notion URL of your page:
+
 ![Database ID](git-assets/database-id.png)
+
 The part between the red is your ID. The options in this file are the following:
 * `display` → Sets how your database will be rendered. Valid options as of now are: `table` and `board`
 * `columns` → Defines which fields/columns to render, and in which order. By default, everything is rendered
