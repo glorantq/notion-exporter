@@ -103,6 +103,25 @@ Now with all this configuration out of the way, you're ready to export your site
 java -jar notion-exporter.jar --config "./config.toml"
 ```
 After the program completes, your site will be ready to go in the output folder you specified.
+
+### Supported blocks
+|Block|Support|Block|Support|
+|---:|:---:|---:|:---:|
+|Bookmark|❌|Breadcrumb|✔|
+|Bulleted List|✔|Callout|✔|
+|Child Database|✔*|Child Page|✔|
+|Code|✔|Divider|✔|
+|Embed|✔*|Equation|✔|
+|File|✔|Heading 1|✔|
+|Heading 2|✔|Heading 3|✔|
+|Image|✔|Numbered List|✔|
+|Paragraph|✔|PDF|✔|
+|Quote|✔|To-Do|✔|
+|Toggle|✔|Video|❌|
+|Database: Table|✔|Database: Kanban|✔|
+|Database: Gallery|❌|Database: Calendar|❌|
+
+I'm constantly working on new blocks as they become available in the API
 ## Building
 
 ### Prerequisites
