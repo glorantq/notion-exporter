@@ -109,9 +109,9 @@ After the program completes, your site will be ready to go in the output folder 
 |---:|:---:|---:|:---:|
 |Bookmark|❌|Breadcrumb|✔|
 |Bulleted List|✔|Callout|✔|
-|Child Database|✔*|Child Page|✔|
+|Child Database|⚠|Child Page|✔|
 |Code|✔|Divider|✔|
-|Embed|✔*|Equation|✔|
+|Embed|⚠|Equation|✔|
 |File|✔|Heading 1|✔|
 |Heading 2|✔|Heading 3|✔|
 |Image|✔|Numbered List|✔|
