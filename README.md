@@ -10,11 +10,16 @@
 A tool written in Java that exports your Notion.so workspace to a static website,
 
 ## About The Project
+I started this project because I wanted a way to host my notes on my own server instead of Notion's, but every existing solution needed a Node.js backend, so I wansn't able to use my university's server.
+This tool generates static HTML from Notion pages, with a CSS included that closely matches the default Notion look. JS code is included for dark mode switching, page sharing, and various other features related
+to blocks. 
 
-Lol
+KaTeX is used for rendering math equations, code blocks are handled by Prism.js, and icons are provided by Feather. Images are automatically optimised for lower storage usage and faster page loads. Depending on page content
+of course, you can achieve pretty good PageSpeed scores:
+
+![PageSpeed Insights](git-assets/pagespeed.png "PageSpeed Insights Mobile")
 
 ## Usage
-
 Bonyolult
 
 ## Building
