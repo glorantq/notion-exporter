@@ -98,7 +98,7 @@ The part between the red is your ID. The options in this file are the following:
 
 If you don't configure a database here, default settings wil be used (table view, everything rendered, no sorting)
 
-Now with all this configuration out of the way, you're ready to export your site. Just run the program with the `--config` argument pointing to your site:
+Now with all this configuration out of the way, you're ready to export your site. Just run the program with the `--config` argument pointing to your configuration file:
 ```shell
 java -jar notion-exporter.jar --config "./config.toml"
 ```
