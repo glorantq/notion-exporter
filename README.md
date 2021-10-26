@@ -4,10 +4,10 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![GPLv3 License][license-shield]][license-url]
-  
-  
+
+
 # Notion Exporter
-A tool written in Java that exports your Notion.so workspace to a static website, 
+A tool written in Java that exports your Notion.so workspace to a static website,
 
 ## About The Project
 
@@ -32,6 +32,12 @@ To build the project on your machine, you will need:
    git clone https://github.com/glorantq/notion-exporter.git
    ```
 2. Build the project with Gradle, or import into your favourite IDE
+
+For testing purposes, two scripts are included for hosting your testing output with ngrok.io
+* `run-tunnel.sh`
+* `run-tunnel-wsl.bat` (this version requires WSL)
+
+These scripts will automatically open an ngrok tunnel to the directory of your choice (`test-out` by default), and open your default browser (requires `wslview` to be installed)
 
 [contributors-shield]: https://img.shields.io/github/contributors/glorantq/notion-exporter.svg?style=flat
 [contributors-url]: https://github.com/glorantq/notion-exporter/graphs/contributors
