@@ -163,4 +163,4 @@ These scripts will automatically open an ngrok tunnel to the directory of your c
 [stars-shield]: https://img.shields.io/github/stars/glorantq/notion-exporter.svg?style=flat
 [stars-url]: https://github.com/glorantq/notion-exporter/stargazers
 [license-shield]: https://img.shields.io/github/license/glorantq/notion-exporter.svg?style=flat
-[license-url]: https://github.com/glorantq/notion-exporter/blob/master/LICENSE.md
+[license-url]: https://github.com/glorantq/notion-exporter/blob/master/LICENSE
