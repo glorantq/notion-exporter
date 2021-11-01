@@ -30,12 +30,19 @@ import hu.glorantq.notion.api.model.blocks.NotionBlock;
 import hu.glorantq.notion.api.model.blocks.impl.*;
 import hu.glorantq.notion.export.DatabaseResolver;
 import hu.glorantq.notion.export.LinkResolver;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URL;
 import java.util.*;
 
 public class NotionRenderer {
@@ -96,6 +103,7 @@ public class NotionRenderer {
         addBlockRenderer(NotionPDFBlock.class, new FreemarkerBlockRenderer<NotionPDFBlock>("blocks/pdf.ftlh"));
         addBlockRenderer(NotionColumnListBlock.class, new FreemarkerBlockRenderer<NotionColumnListBlock>("blocks/columnList.ftlh"));
         addBlockRenderer(NotionColumnBlock.class, new FreemarkerBlockRenderer<NotionColumnBlock>("blocks/column.ftlh"));
+        addBlockRenderer(NotionBookmarkBlock.class, new FreemarkerBlockRenderer<NotionBookmarkBlock>("blocks/bookmark.ftlh"));
 
         addBlockRenderer(NotionUnsupportedBlock.class, (notionBlock, page) -> "");
 
@@ -173,6 +181,7 @@ public class NotionRenderer {
         dataModel.put("getDatabaseDisplay", new GetDatabaseDisplayMethod());
         dataModel.put("getGroupBy", new GetGroupByMethod());
         dataModel.put("performKanbanGrouping", new PerformKanbanGroupingMethod());
+        dataModel.put("resolveBookmark", new ResolveBookmarkMethod());
     }
 
     private class FreemarkerBlockRenderer<T extends NotionBlock> implements BlockRenderer {
@@ -239,6 +248,56 @@ public class NotionRenderer {
         return stringBuilder.toString();
     }
 
+    private class ResolveBookmarkMethod implements TemplateMethodModelEx {
+        private final OkHttpClient httpClient = new OkHttpClient.Builder().build();
+
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1) {
+                throw new TemplateModelException("Invalid parameters!");
+            }
+
+            TemplateModel urlModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) urlModel;
+            String url = scalarModel.getAsString();
+
+            try {
+                Request request = new Request.Builder()
+                        .url(url)
+                        .get()
+                        .build();
+
+                okhttp3.Response response = httpClient.newCall(request).execute();
+                ResponseBody responseBody = response.body();
+
+                if(responseBody == null) {
+                    return new NotionBookmarkBlock.BookmarkDetails("", null);
+                }
+
+                String pageSource = responseBody.string();
+                responseBody.close();
+
+                Document document = Jsoup.parse(pageSource);
+                String title = document.title();
+
+                Element iconElement = document.head().select("link[href~=.*\\.(ico|png)]").first();
+                String icon;
+
+                if(iconElement != null) {
+                    icon = iconElement.attr("href");
+                } else {
+                    URL url1 = new URL(url);
+                    icon = url1.getProtocol() + "://" + url1.getHost() + "/favicon.ico";
+                }
+
+                return new NotionBookmarkBlock.BookmarkDetails(title, icon);
+            } catch (Exception e) {
+                logger.error("Failed to fetch bookmarked page!", e);
+                throw new TemplateModelException("Failed to fetch bookmarked page!", e);
+            }
+        }
+    }
+
     private class ResolvePageLinkMethod implements TemplateMethodModelEx {
         @Override
         public Object exec(List arguments) throws TemplateModelException {
@@ -270,8 +329,8 @@ public class NotionRenderer {
                 throw new TemplateModelException("Invalid parameters!");
             }
 
-            TemplateModel pageIdModel = (TemplateModel) arguments.get(0);
-            TemplateScalarModel scalarModel = (TemplateScalarModel) pageIdModel;
+            TemplateModel urlModel = (TemplateModel) arguments.get(0);
+            TemplateScalarModel scalarModel = (TemplateScalarModel) urlModel;
             String rawUrl = scalarModel.getAsString();
 
             TemplateModel pageArgumentModel = (TemplateModel) arguments.get(1);

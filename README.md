@@ -107,7 +107,7 @@ After the program completes, your site will be ready to go in the output folder 
 ### Supported blocks
 |Block|Support|Block|Support|
 |---:|:---:|---:|:---:|
-|Bookmark|🔨|Breadcrumb|✔|
+|Bookmark|✔|Breadcrumb|✔|
 |Bulleted List|✔|Callout|✔|
 |Child Database|🔨|Child Page|✔|
 |Code|✔|Divider|✔|

@@ -24,6 +24,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.reflect.TypeToken;
 import hu.glorantq.notion.api.model.NotionRichText;
 import hu.glorantq.notion.api.model.blocks.NotionBlock;
+import lombok.Data;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -50,5 +51,11 @@ public class NotionBookmarkBlock extends NotionBlock {
         caption = context.deserialize(jsonObject.get("caption"), TypeToken.getParameterized(List.class, NotionRichText.class).getType());
 
         return this;
+    }
+
+    @Data
+    public static class BookmarkDetails {
+        private final String title;
+        private final String iconUrl;
     }
 }
