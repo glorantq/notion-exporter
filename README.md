@@ -38,7 +38,7 @@ After the integration has been created, you need to share the pages you with to 
 
 Once all this setup is done, you can move on to configuring this tool. There are two ways to go about this: using the
 command-line interface, or creating a configuration file. While you can use the command-line interface, it's recommended to
-create a configuration file instead, and this is what I will be writing about here.
+create a configuration file instead, and this is what I will be writing about here. If you really want to use the CLI, run the program with `--help` to see all available options.
 
 A sample configuration file looks like this:
 ```toml
