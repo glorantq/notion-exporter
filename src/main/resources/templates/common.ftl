@@ -46,3 +46,13 @@
 ${renderBlock(block, page)}
     </div>
 </#macro>
+
+<#macro getUserAvatar person page>
+    <#if person.avatarUrl??>
+        <img class="user-avatar" src="${resolveAssetLink(person.avatarUrl, page)}">
+    <#else>
+        <div class="generated-user-avatar">
+            <span class="user-initial"><#if person.name?? && person.name?length gt 0 >${person.name[0]}<#else>?</#if></span>
+        </div>
+    </#if>
+</#macro>

@@ -114,26 +114,26 @@ public class NotionPropertyValueObject {
         @Expose
         private boolean booleanValue;
 
+        @Expose
+        private DatePropertyValue date;
+
+        @Expose
+        private String expression;
+
         public enum Type {
             @SerializedName("string") STRING, @SerializedName("number") NUMBER, @SerializedName("boolean") BOOLEAN,
             @SerializedName("date") DATE
         }
     }
 
-    @Expose
-    private List<RelationPropertyValue> relation;
-
-    @Getter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @ToString
-    @EqualsAndHashCode
-    public static class RelationPropertyValue {
-        @Expose
-        private UUID id;
-    }
-
+    // TODO: Relations
     // TODO: Rollup
+
+    @Expose
+    private List<NotionUser> people;
+
+    @Expose
+    private List<NotionFile> files;
 
     public enum Type {
         @SerializedName("rich_text") RICH_TEXT, @SerializedName("number") NUMBER, @SerializedName("select") SELECT,

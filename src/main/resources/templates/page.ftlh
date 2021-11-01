@@ -97,6 +97,7 @@
     <h1 class="page-title"><@common.getPageTitle page=page /></h1>
     <#if page.parent.parentType == "database_id">
         <@database.renderDatabaseProperties page=page />
+        <hr>
     </#if>
     <#if page.objectType == "database">
         <@database.renderDatabase page=page containingPage=page/>

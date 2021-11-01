@@ -20,6 +20,7 @@ package hu.glorantq.notion.render;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.ext.beans.BeansWrapperBuilder;
 import freemarker.template.*;
+import freemarker.template.utility.DeepUnwrap;
 import hu.glorantq.notion.api.NotionAPI;
 import hu.glorantq.notion.api.QueryDatabaseBody;
 import hu.glorantq.notion.api.model.NotionPage;
@@ -60,6 +61,8 @@ public class NotionRenderer {
         freemarkerConfiguration = new Configuration(Configuration.VERSION_2_3_31);
         freemarkerConfiguration.setClassLoaderForTemplateLoading(NotionRenderer.class.getClassLoader(), "templates/");
         freemarkerConfiguration.setDefaultEncoding("UTF-8");
+        freemarkerConfiguration.setURLEscapingCharset("UTF-8");
+        freemarkerConfiguration.setOutputEncoding("UTF-8");
         freemarkerConfiguration.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
         freemarkerConfiguration.setLogTemplateExceptions(false);
         freemarkerConfiguration.setWrapUncheckedExceptions(true);
@@ -91,6 +94,8 @@ public class NotionRenderer {
         addBlockRenderer(NotionToggleBlock.class, new FreemarkerBlockRenderer<NotionToggleBlock>("blocks/toggle.ftlh"));
         addBlockRenderer(NotionEmbedBlock.class, new FreemarkerBlockRenderer<NotionEmbedBlock>("blocks/embed.ftlh"));
         addBlockRenderer(NotionPDFBlock.class, new FreemarkerBlockRenderer<NotionPDFBlock>("blocks/pdf.ftlh"));
+        addBlockRenderer(NotionColumnListBlock.class, new FreemarkerBlockRenderer<NotionColumnListBlock>("blocks/columnList.ftlh"));
+        addBlockRenderer(NotionColumnBlock.class, new FreemarkerBlockRenderer<NotionColumnBlock>("blocks/column.ftlh"));
 
         addBlockRenderer(NotionUnsupportedBlock.class, (notionBlock, page) -> "");
 

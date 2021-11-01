@@ -84,8 +84,23 @@ public class NotionPropertyValueObjectDeserializer implements JsonDeserializer<N
 
         NotionPropertyValueObject.DatePropertyValue date = context.deserialize(jsonObject.get("date"), NotionPropertyValueObject.DatePropertyValue.class);
         NotionPropertyValueObject.FormulaPropertyValue formula = context.deserialize(jsonObject.get("formula"), NotionPropertyValueObject.FormulaPropertyValue.class);
-        List<NotionPropertyValueObject.RelationPropertyValue> relation = context.deserialize(jsonObject.get("relation"), TypeToken.getParameterized(List.class, NotionPropertyValueObject.RelationPropertyValue.class).getType());
 
-        return new NotionPropertyValueObject(id, type, title, richText, number, selectPropertyValue, multiSelect, date, formula, relation);
+        JsonElement peopleElement = jsonObject.get("people");
+        List<NotionUser> people;
+        if(peopleElement != null && peopleElement.isJsonArray()) {
+            people = context.deserialize(peopleElement, TypeToken.getParameterized(List.class, NotionUser.class).getType());
+        } else {
+            people = new ArrayList<>();
+        }
+
+        JsonElement filesElement = jsonObject.get("files");
+        List<NotionFile> files;
+        if(filesElement != null && filesElement.isJsonArray()) {
+            files = context.deserialize(filesElement, TypeToken.getParameterized(List.class, NotionFile.class).getType());
+        } else {
+            files = new ArrayList<>();
+        }
+
+        return new NotionPropertyValueObject(id, type, title, richText, number, selectPropertyValue, multiSelect, date, formula, people, files);
     }
 }

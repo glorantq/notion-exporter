@@ -47,7 +47,7 @@ html {
     --notion-yellow_background: rgba(255, 220, 73, 0.8);
     --notion-orange_background: rgba(255, 163, 68, 0.8);
     --notion-brown_background: rgba(147, 114, 100, 0.8);
-    --notoin-green_background: rgba(12, 158, 12, 0.8);
+    --notion-green_background: rgba(12, 158, 12, 0.8);
     --notion-gray_background: rgba(151, 154, 155, 0.2);
     --table-separator: rgba(151, 154, 155, 0.25);
     --kanban-border: rgba(151, 154, 155, 0.25);
@@ -457,7 +457,6 @@ p {
 }
 
 .callout-content > * {
-	margin: 0.3rem;
     overflow-wrap: anywhere;
     word-break: break-word;
     overflow: auto;
@@ -587,6 +586,46 @@ details summary::-webkit-details-marker {
 .pdf-container object {
     width: 100%;
     height: 40vh;
+}
+
+.column-list {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+}
+
+.column {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.column-list > :not(:first-child) {
+    margin-left: 0.5rem;
+}
+
+.column-list > :not(:last-child) {
+    margin-right: 0.5rem;
+}
+
+.column .image-container {
+    align-items: flex-start;
+}
+
+@media only screen and (max-width: 600px) {
+    .column-list {
+        flex-wrap: wrap;
+    }
+
+    .column-list > .column {
+        margin-left: 0;
+        margin-right: 0;
+    }
 }
 
 /* Rich text */
@@ -798,6 +837,43 @@ blockquote.renderer-error img {
     word-break: keep-all;
     overflow-wrap: normal;
     white-space: nowrap;
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
+}
+
+.user-property {
+    margin: 0.2rem;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.user-avatar, .generated-user-avatar {
+    width: 1.2rem;
+    height: 1.2rem;
+    min-width: 1.2rem;
+    min-height: 1.2rem;
+    border-radius: 50%;
+    border: 1px solid var(--text-color);
+    margin-right: 0.3rem;
+}
+
+.generated-user-avatar {
+    display: inline-block;
+    text-align: center;
+    line-height: 1.2rem;
+}
+
+.generated-user-avatar > .user-initial {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.file-property a {
+    color: var(--text-color) !important;
+    border: none !important;
+    text-decoration: none;
 }
 
 hr {
@@ -862,6 +938,7 @@ table {
     table-layout: auto;
     border-collapse: collapse;
     font-size: 0.9rem;
+    text-align: left;
 }
 
 th {

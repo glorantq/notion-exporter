@@ -62,7 +62,8 @@ public abstract class NotionBlock {
         @SerializedName("code") CODE(NotionCodeBlock.class), @SerializedName("callout") CALLOUT(NotionCalloutBlock.class),
         @SerializedName("equation") EQUATION(NotionEquationBlock.class), @SerializedName("quote") QUOTE(NotionQuoteBlock.class),
         @SerializedName("divider") DIVIDER(NotionDividerBlock.class), @SerializedName("table_of_contents") TABLE_OF_CONTENTS(NotionNotImplementedBlock.class),
-        @SerializedName("breadcrumb") BREADCRUMB(NotionBreadcrumbBlock.class),
+        @SerializedName("breadcrumb") BREADCRUMB(NotionBreadcrumbBlock.class), @SerializedName("column_list") COLUMN_LIST(NotionColumnListBlock.class),
+        @SerializedName("column") COLUMN (NotionColumnBlock.class),
         @SerializedName("unsupported") UNSUPPORTED(NotionUnsupportedBlock.class);
 
         private final Class<? extends NotionBlock> typeClass;

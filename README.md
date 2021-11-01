@@ -5,7 +5,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![GPLv3 License][license-shield]][license-url]
 
-
+ 
 # Notion Exporter
 A tool written in Java that exports your Notion.so workspace to a static website,
 
@@ -107,21 +107,33 @@ After the program completes, your site will be ready to go in the output folder 
 ### Supported blocks
 |Block|Support|Block|Support|
 |---:|:---:|---:|:---:|
-|Bookmark|❌|Breadcrumb|✔|
+|Bookmark|🔨|Breadcrumb|✔|
 |Bulleted List|✔|Callout|✔|
-|Child Database|⚠|Child Page|✔|
+|Child Database|🔨|Child Page|✔|
 |Code|✔|Divider|✔|
-|Embed|⚠|Equation|✔|
+|Embed|🔨|Equation|✔|
 |File|✔|Heading 1|✔|
 |Heading 2|✔|Heading 3|✔|
 |Image|✔|Numbered List|✔|
 |Paragraph|✔|PDF|✔|
 |Quote|✔|To-Do|✔|
-|Toggle|✔|Video|❌|
+|Toggle|✔|Video|🔨|
 |Database: Table|✔|Database: Kanban|✔|
-|Database: Gallery|❌|Database: Calendar|❌|
+|Database: Gallery|🔨|Database: Calendar|❌|
+|Database: List|🔨|Database: Timeline|❌|
+|Table of Contents|🔨|Columns|✔|
 
-I'm constantly working on new blocks as they become available in the API
+* ✔ → fully supported
+* 🔨 → work-in-progress
+* ❌ → not supported in the near future, or ever
+
+I'm constantly working on new blocks as they become available in the API. Thinks known to not work as of now:
+* Database values of type: rollup, relations and formulas
+* Child databases inside columns
+
+### Found this project useful?
+Consider supporting me on [Ko-Fi](https://ko-fi.com/A8372CD1) or [Coinbase](https://commerce.coinbase.com/checkout/888bc5cd-21a3-4762-b213-1ad39467628b). Any support is appreciated!
+
 ## Building
 
 ### Prerequisites

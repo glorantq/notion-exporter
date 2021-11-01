@@ -51,11 +51,13 @@ import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.text.Normalizer;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class NotionExporterImplementation {
@@ -103,6 +105,9 @@ public class NotionExporterImplementation {
 
                     return chain.proceed(newRequest);
                 })
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -140,6 +145,7 @@ public class NotionExporterImplementation {
                     }
                 } catch (Exception e) {
                     logger.error("Failed to resolve asset link!", e);
+                    throw new RuntimeException("Failed to resolve asset link!", e);
                 }
 
                 if (mirrorAssets) {
@@ -148,7 +154,7 @@ public class NotionExporterImplementation {
 
                         String fileExtension = FilenameUtils.getExtension(url.getPath());
                         String fileName = FilenameUtils.getName(url.getPath());
-                        String baseName = FilenameUtils.getBaseName(url.getPath());
+                        String baseName = URLDecoder.decode(FilenameUtils.getBaseName(url.getPath()), StandardCharsets.UTF_8);
 
                         Request request = new Request.Builder()
                                 .url(url)
@@ -398,6 +404,8 @@ public class NotionExporterImplementation {
             return linkedPages;
         }
 
+        exploredPages.add(cleanPageId(page.getPageId().toString()));
+
         try {
             List<NotionBlock> pageBlocks = new ArrayList<>();
 
@@ -417,8 +425,6 @@ public class NotionExporterImplementation {
         } catch (Exception e) {
             throw new RuntimeException("Failed to get page blocks!", e);
         }
-
-        exploredPages.add(cleanPageId(page.getPageId().toString()));
 
         return linkedPages;
     }
@@ -442,16 +448,15 @@ public class NotionExporterImplementation {
 
                 NotionPage childPage = notionAPI.retrievePage(block.getId().toString()).execute().body();
 
-                if(!linkedPages.contains(childPage)) {
-                    linkedPages.add(childPage);
-                }
-
                 if(childPage == null) {
                     continue;
                 }
 
+                if(!linkedPages.contains(childPage)) {
+                    linkedPages.add(childPage);
+                }
+
                 addAllUnique(linkedPages, getLinkedPages(childPage));
-                exploredPages.add(cleanPageId(childPage.getPageId().toString()));
 
                 continue;
             }
@@ -463,12 +468,12 @@ public class NotionExporterImplementation {
 
                 NotionPage childDatabase = notionAPI.retrieveDatabase(block.getId().toString()).execute().body();
 
-                if(!linkedPages.contains(childDatabase)) {
-                    linkedPages.add(childDatabase);
-                }
-
                 if(childDatabase == null) {
                     continue;
+                }
+
+                if(!linkedPages.contains(childDatabase)) {
+                    linkedPages.add(childDatabase);
                 }
 
                 List<NotionPage> databaseRecords = new ArrayList<>();
@@ -484,12 +489,28 @@ public class NotionExporterImplementation {
                     }
                 } while (nextCursor != null);
 
+                exploredPages.add(cleanPageId(childDatabase.getPageId().toString()));
                 addAllUnique(linkedPages, databaseRecords);
 
-                exploredPages.add(cleanPageId(childDatabase.getPageId().toString()));
-                exploredPages.addAll(databaseRecords.stream().map(it -> cleanPageId(it.getPageId().toString())).collect(Collectors.toList()));
+                for(NotionPage record : databaseRecords) {
+                    addAllUnique(linkedPages, getLinkedPages(record));
+                }
 
                 continue;
+            }
+
+            if(block.isHasChildren()) {
+                List<NotionBlock> childrenBlocks = new ArrayList<>();
+
+                String nextCursor = null;
+                do {
+                    NotionPaginatedResponse<NotionBlock> paginatedResponse = notionAPI.retrieveBlockChildren(block.getId().toString(), nextCursor, 100).execute().body();
+                    nextCursor = paginatedResponse.getNextCursor();
+
+                    childrenBlocks.addAll(paginatedResponse.getResults());
+                } while(nextCursor != null);
+
+                addAllUnique(linkedPages, processBlockArray(childrenBlocks));
             }
 
             if(linkableTypes.contains(block.getClass())) {
@@ -498,14 +519,6 @@ public class NotionExporterImplementation {
 
                 Object textList0 = textListField.get(block);
                 List<NotionRichText> textList = (List<NotionRichText>) textList0;
-
-                List<NotionBlock> childrenBlocks = null;
-                if(block.isHasChildren()) {
-                    Field childrenField = block.getClass().getDeclaredField("children");
-                    childrenField.setAccessible(true);
-
-                    childrenBlocks = (List<NotionBlock>) childrenField.get(block);
-                }
 
                 for(NotionRichText richText : textList) {
                     if(richText.getType() != NotionRichText.Type.MENTION) {
@@ -531,12 +544,7 @@ public class NotionExporterImplementation {
                         }
 
                         addAllUnique(linkedPages, getLinkedPages(linkedPage));
-                        exploredPages.add(cleanPageId(pageId));
                     }
-                }
-
-                if(childrenBlocks != null) {
-                    addAllUnique(linkedPages, processBlockArray(childrenBlocks));
                 }
             }
         }
@@ -553,8 +561,11 @@ public class NotionExporterImplementation {
         String mappedName = nameMapping.get(pageId);
 
         if(mappedName == null) {
-            throw new RuntimeException("No name mapping!");
+            return null;
         }
+
+        // TODO: Databases in columns break everything, maximise CSS broken, Kanban renders above other stuff, databases in columns resolve to wrong paths (maybe column is set as a parent?)
+        // TODO: d374515b0bcb4e64869904e94333d25d is an ID of a column with a database inside, this is set as the parent with type page_id ???
 
         return mappedName;
     }
@@ -594,7 +605,8 @@ public class NotionExporterImplementation {
 
                     String parentId0 = parentId;
                     do {
-                        pathElements.add(getPageName(parentId0));
+                        String parentName = getPageName(parentId0);
+                        pathElements.add(parentName);
 
                         NotionPage parent0 = findPage(parentId0);
                         if(parent0 == null || parent0.getParent().isWorkspace()) {

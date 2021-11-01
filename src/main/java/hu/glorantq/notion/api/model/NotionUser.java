@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2021 Gerber Lóránt Viktor
+ *     Copyright (C) 2021 Gerber Lóránt Viktor
  *
  *      This program is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
@@ -19,45 +19,38 @@ package hu.glorantq.notion.api.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import hu.glorantq.notion.api.StringConstants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.UUID;
+
+/*
+    https://developers.notion.com/reference/user
+ */
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class NotionIcon {
+public class NotionUser {
+    @Expose
+    private String object;
+
+    @Expose
+    private UUID id;
+
     @Expose
     private Type type;
 
-    @SerializedName("external")
     @Expose
-    private NotionFile.External externalFileData;
+    private String name;
 
-    @SerializedName("file")
     @Expose
-    private NotionFile.File hostedFileData;
-
-    @SerializedName("emoji")
-    @Expose
-    private String emojiCharacter = null;
-
-    public NotionFile toFileObject() {
-        if(isEmoji()) {
-            throw new RuntimeException("This icon object contains a file!");
-        }
-
-        return new NotionFile(type == Type.EXTERNAL ? NotionFile.Type.EXTERNAL : NotionFile.Type.HOSTED, externalFileData, hostedFileData, "Icon");
-    }
-
-    public boolean isEmoji() {
-        return type == Type.EMOJI;
-    }
+    @SerializedName("avatar_url")
+    private String avatarUrl;
 
     public enum Type {
-        @SerializedName("emoji") EMOJI, @SerializedName("external") EXTERNAL, @SerializedName("file") HOSTED
+        @SerializedName("person") PERSON, @SerializedName("bot") BOT
     }
 }

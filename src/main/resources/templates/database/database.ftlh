@@ -20,6 +20,8 @@
 <#import "./table.ftlh" as tableRenderer>
 <#import "./board.ftlh" as boardRenderer>
 
+<#import "../common.ftl" as common>
+
 <#macro renderDatabaseProperties page>
     <div class="database-property-values">
         <#list page.properties.entrySet() as entry>
@@ -37,7 +39,7 @@
                     <i data-feather="<@getPropertyIcon type=valueType />"></i> ${key}
                 </span>
                 <span class="property-value">
-                    <@getPropertyContent value=value page=page />
+                    <@getPropertyContent value=value page=page containingPage=page />
                 </span>
             </div>
         </#list>
@@ -58,22 +60,27 @@
                 <@boardRenderer.render page=page containingPage=containingPage databaseRecords=databaseRecords />
                 <#break>
 
+            <#-- TODO: Gallery renderer -->
+            <#-- TODO: List renderer -->
             <#-- TODO: Calendar renderer -->
+            <#-- TODO: Timeline renderer -->
             <#default>
                 <blockquote class="renderer-error">No database renderer for ${display}!</blockquote>
         </#switch>
     </div>
 </#macro>
 
-<#macro getPropertyIcon type><#switch type><#case "RICH_TEXT">align-left<#break><#case "NUMBER">hash<#break><#case "SELECT"><#case "MULTI_SELECT">tag<#break><#case "TITLE">type<#break><#default>help-circle</#switch></#macro>
+<#macro getPropertyIcon type><#switch type><#case "RICH_TEXT">align-left<#break><#case "NUMBER">hash<#break><#case "SELECT"><#case "MULTI_SELECT">tag<#break><#case "TITLE">type<#break><#case "DATE">calendar<#break><#case "PEOPLE">users<#break><#case "FILES">link<#break><#default>help-circle</#switch></#macro>
 
-<#macro getPropertyContent value page>
+<#macro getPropertyContent value page containingPage>
     <#assign type = value.type.name()>
     <#switch type>
         <#case "RICH_TEXT">
-            <#list value.richText as text>
-                <@richText.renderRichText richText=text page=page />
-            </#list>
+            <#if value.richText?? && value.richText?size gt 0>
+                <#list value.richText as text>
+                    <@richText.renderRichText richText=text page=page />
+                </#list>
+            </#if>
             <#break>
 
         <#case "NUMBER">
@@ -81,19 +88,54 @@
             <#break>
 
         <#case "SELECT">
-            <@renderSelectValue value.select.name value.select.color />
+            <#if value.select??>
+                <@renderSelectValue value.select.name value.select.color />
+            </#if>
             <#break>
 
         <#case "MULTI_SELECT">
-            <#list value.multiSelect as select>
-                <@renderSelectValue select.name select.color />
-            </#list>
+            <#if value.multiSelect?? && value.multiSelect?size gt 0>
+                <#list value.multiSelect as select>
+                    <@renderSelectValue select.name select.color />
+                </#list>
+            </#if>
             <#break>
 
         <#case "TITLE">
+            <#if page.icon??>
+                <@common.getIcon icon=page.icon imgClass="table-icon" page=containingPage />
+            </#if>
+
             <#list value.title as text>
                <@richText.renderRichText richText=text page=page />
             </#list>
+            <#break>
+
+        <#case "DATE">
+            <#if value.date?? && value.date.start??>
+                ${value.date.start?datetime?string.long}<#if value.date.end??> - ${value.date.end?datetime?string.long}</#if>
+            </#if>
+            <#break>
+
+        <#-- TODO: Formula, but I don't want to write an interpreter for expreessions right now -->
+
+        <#case "PEOPLE">
+            <#if value.people?? && value.people?size gt 0>
+                <#list value.people as person>
+                    <div class="user-property">
+                        <@common.getUserAvatar person=person page=containingPage />
+                        <span class="user-name">${person.name}</span>
+                    </div>
+                </#list>
+            </#if>
+            <#break>
+
+        <#case "FILES">
+            <#if value.files?? && value.files?size gt 0>
+                <#list value.files as file>
+                    <span class="file-property select-property rich-text-color-gray_background"><a href="<@common.getUrlFromFile file=file page=containingPage />" target="_blank" download="${file.name}">${file.name}</a></span>
+                </#list>
+            </#if>
             <#break>
 
         <#default>

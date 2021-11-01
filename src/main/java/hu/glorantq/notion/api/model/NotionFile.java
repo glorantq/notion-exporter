@@ -46,6 +46,9 @@ public class NotionFile {
     @Expose
     private File hostedData = null;
 
+    @Expose
+    private String name; // Used in databases
+
     @Getter
     @AllArgsConstructor
     @NoArgsConstructor

@@ -36,9 +36,9 @@
 
                     <#assign recordValue = record.properties[column]>
                     <#if valueType == "TITLE">
-                        <td><span><a href="${resolvePageLink(record.pageId, containingPage)}"><@database.getPropertyContent value=recordValue page=page /></a></span></td>
+                        <td><span><a href="${resolvePageLink(record.pageId, containingPage)}"><@database.getPropertyContent value=recordValue page=record containingPage=containingPage /></a></span></td>
                     <#else>
-                        <td><@database.getPropertyContent value=recordValue page=page /></td>
+                        <td><@database.getPropertyContent value=recordValue page=record containingPage=containingPage /></td>
                     </#if>
                 </#list>
             </tr>

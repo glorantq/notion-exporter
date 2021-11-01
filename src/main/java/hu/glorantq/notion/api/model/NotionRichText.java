@@ -89,13 +89,16 @@ public class NotionRichText {
         private Type type;
 
         @Expose
-        private Map<String, Object> user;
+        private NotionUser user;
 
         @Expose
         private Map<String, Object> page;
 
         @Expose
         private Map<String, Object> database;
+
+        @Expose
+        private NotionPropertyValueObject.DatePropertyValue date;
 
         public enum Type {
             @SerializedName("user") USER, @SerializedName("page") PAGE, @SerializedName("database") DATABASE, @SerializedName("date") DATE

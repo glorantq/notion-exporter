@@ -51,10 +51,6 @@ public class NotionBlockDeserializer implements JsonDeserializer<NotionBlock> {
                 JsonObject blockJsonRepresentation = blockObject.get(typeName).getAsJsonObject();
 
                 returnValue = createdInstance.deserialize(blockJsonRepresentation, context);
-
-                if(typeEnum == NotionBlock.Type.VIDEO) {
-                    System.out.println(blockObject); // TODO: Remove
-                }
             } catch (Exception e0) {
                 throw new JsonParseException("Failed to instantiate type-specific block object! " + typeName, e0);
             }
