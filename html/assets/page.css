@@ -637,6 +637,13 @@ details summary::-webkit-details-marker {
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
+    cursor: pointer;
+    transition: background-color 0.1s linear;
+    background-color: transparent;
+}
+
+.bookmark-container:hover {
+    background-color: var(--notion-gray_background);
 }
 
 .bookmark-container .bookmark-details {

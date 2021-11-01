@@ -16,7 +16,7 @@
 -->
 
 <#import "richText.ftlh" as richText>
-    <div class="bookmark-container">
+<div class="bookmark-container" onclick="window.open('${block.url}', '_blank').focus();">
     <#assign bookmark = resolveBookmark(block.url)>
 
     <span class="bookmark-title">${bookmark.title}</span>

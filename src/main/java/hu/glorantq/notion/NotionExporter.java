@@ -33,9 +33,9 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -330,6 +330,35 @@ public class NotionExporter {
             } catch (Exception e) {
                 LOGGER.error("Failed to copy icon!", e);
             }
+        }
+
+        LOGGER.info("Extracting asset bundle...");
+        try {
+            File tempAssetBundle = new File(assetsDirectory, "assetbundle_temp.zip");
+            InputStream resourceStream = NotionExporter.class.getClassLoader().getResourceAsStream("assetbundle");
+            FileOutputStream fileOutputStream = new FileOutputStream(tempAssetBundle);
+            IOUtils.copy(resourceStream, fileOutputStream);
+            fileOutputStream.close();
+            resourceStream.close();
+
+            FileSystem zipFileSystem = FileSystems.newFileSystem(tempAssetBundle.toPath(), null);
+            Path zipRoot = zipFileSystem.getPath("/");
+            Files.walkFileTree(zipRoot, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Path zipFilePath = zipRoot.relativize(file);
+                    Path outPath = assetsDirectory.toPath().resolve(zipFilePath.toString());
+                    Files.createDirectories(outPath.getParent());
+                    Files.copy(file, outPath);
+
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+
+            tempAssetBundle.delete();
+            LOGGER.info("Extracted assets!");
+        } catch (Exception e) {
+            LOGGER.error("Failed to extract asset bundle!", e);
         }
 
         NotionBlock.Type[] blockTypes = NotionBlock.Type.values();

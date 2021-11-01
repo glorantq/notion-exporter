@@ -564,9 +564,6 @@ public class NotionExporterImplementation {
             return null;
         }
 
-        // TODO: Databases in columns break everything, maximise CSS broken, Kanban renders above other stuff, databases in columns resolve to wrong paths (maybe column is set as a parent?)
-        // TODO: d374515b0bcb4e64869904e94333d25d is an ID of a column with a database inside, this is set as the parent with type page_id ???
-
         return mappedName;
     }
 
